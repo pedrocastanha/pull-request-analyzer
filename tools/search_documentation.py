@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 def search_informations(query: str, namespace: str) -> str:
     """
         Use esta ferramenta para pesquisar práticas recomendadas de programação, padrões de código e conceitos presentes nos livros mais renomados da área.
-        java:
-        padroes
-
     """
     try:
         logger.info(f"Searching informations for {query}")
