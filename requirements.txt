@@ -29,3 +29,5 @@ docx
 PyMuPDF
 python-docx
 python-multipart
+serpapi
+google-search-results
