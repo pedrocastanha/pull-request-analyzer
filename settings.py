@@ -15,6 +15,7 @@ class SharedSettings(BaseModel):
     PINECONE_INDEX_NAME: ClassVar[str | None] = os.getenv("PINECONE_INDEX_NAME")
     PINECONE_API_KEY: ClassVar[str | None] = os.getenv("PINECONE_API_KEY")
 
+
     llm_max_tokens: ClassVar[int] = 4000
 
     github_token: ClassVar[str | None] = os.getenv("GITHUB_TOKEN")
