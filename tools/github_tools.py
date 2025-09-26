@@ -16,7 +16,6 @@ class GitHubToolsConfig(BaseModel):
     max_file_size: int = 1024 * 1024  # 1MB
     max_files: int = 50
 
-
 class GitHubPRTool(BaseTool):
     """Ferramenta para buscar informações básicas do PR"""
     name = "get_pr_info"
@@ -71,7 +70,6 @@ class GitHubFileChangesTool(BaseTool):
             files = pr.get_files()
 
             for file in files:
-                # Limita o tamanho dos arquivos processados
                 if file.changes > self.config.max_files:
                     continue
 
@@ -84,16 +82,13 @@ class GitHubFileChangesTool(BaseTool):
                     "patch": file.patch if file.patch else None
                 }
 
-                # Tenta buscar conteúdo completo dos arquivos
                 try:
-                    # Arquivo antes das mudanças (base)
                     if file.status != "added":
                         before_content = self._get_file_content(
                             repo, file.filename, pr.base.sha
                         )
                         file_data["before_content"] = before_content
 
-                    # Arquivo após as mudanças (head)
                     if file.status != "removed":
                         after_content = self._get_file_content(
                             repo, file.filename, pr.head.sha
@@ -115,11 +110,9 @@ class GitHubFileChangesTool(BaseTool):
         try:
             file_content = repo.get_contents(filename, ref=sha)
 
-            # Verifica o tamanho do arquivo
             if file_content.size > self.config.max_file_size:
                 return f"[ARQUIVO MUITO GRANDE: {file_content.size} bytes]"
 
-            # Decodifica o conteúdo
             if file_content.encoding == "base64":
                 content = base64.b64decode(file_content.content).decode('utf-8')
                 return content
@@ -143,7 +136,6 @@ class GitHubDiffTool(BaseTool):
     def _run(self, repo_owner: str, repo_name: str, pr_number: int) -> Dict:
         """Analisa o diff do PR"""
         try:
-            # Usa a API REST para pegar o diff completo
             url = f"https://api.github.com/repos/{repo_owner}/{repo_name}/pulls/{pr_number}"
             headers = {
                 "Authorization": f"token {self.config.token}",
@@ -155,7 +147,6 @@ class GitHubDiffTool(BaseTool):
 
             diff_content = response.text
 
-            # Parse básico do diff
             diff_stats = self._parse_diff_stats(diff_content)
 
             return {
@@ -180,13 +171,12 @@ class GitHubDiffTool(BaseTool):
         current_file = None
 
         for line in lines:
-            # Nova arquivo
             if line.startswith("diff --git"):
                 if current_file:
                     stats["files"].append(current_file)
 
                 parts = line.split()
-                filename = parts[2][2:]  # Remove 'a/' prefix
+                filename = parts[2][2:]
                 current_file = {
                     "filename": filename,
                     "additions": 0,
@@ -194,19 +184,16 @@ class GitHubDiffTool(BaseTool):
                 }
                 stats["files_changed"] += 1
 
-            # Linhas adicionadas
             elif line.startswith("+") and not line.startswith("+++"):
                 if current_file:
                     current_file["additions"] += 1
                 stats["additions"] += 1
 
-            # Linhas removidas
             elif line.startswith("-") and not line.startswith("---"):
                 if current_file:
                     current_file["deletions"] += 1
                 stats["deletions"] += 1
 
-        # Adiciona o último arquivo
         if current_file:
             stats["files"].append(current_file)
 
@@ -223,7 +210,6 @@ class GitHubToolsManager:
         self.diff_tool = GitHubDiffTool(self.config)
 
     def get_all_tools(self) -> List[BaseTool]:
-        """Retorna todas as ferramentas disponíveis"""
         return [
             self.pr_tool,
             self.files_tool,
@@ -235,7 +221,6 @@ class GitHubToolsManager:
         state.log(f"Coletando dados do PR #{state.pr_number}")
 
         try:
-            # 1. Informações básicas
             pr_info = self.pr_tool._run(
                 state.repo_owner,
                 state.repo_name,
@@ -252,7 +237,6 @@ class GitHubToolsManager:
 
             state.log(f"PR encontrado: '{state.pr_title}' por {state.pr_author}")
 
-            # 2. Mudanças nos arquivos
             files_data = self.files_tool._run(
                 state.repo_owner,
                 state.repo_name,

@@ -3,6 +3,15 @@ from fastapi import APIRouter, Request, HTTPException, UploadFile, File, Form
 from utils.document_processor import DocumentProcessor
 from utils.pinecone_manager import PineconeManager
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
 @router.post("/add-document")
 async def add_document_vector_store(file: UploadFile = File(...), namespace: str = Form(...)):
     logger.info(f"Received request to add document '{file.filename}' to namespace: {namespace}")

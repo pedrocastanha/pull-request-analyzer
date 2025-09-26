@@ -1,9 +1,8 @@
-import os
-import uuid
 import logging
-from pinecone import Pinecone, ServerlessSpec
-from langchain_openai import OpenAIEmbeddings
+import uuid
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pinecone import Pinecone, ServerlessSpec
 from settings import SharedSettings
 
 logger = logging.getLogger(__name__)
@@ -12,9 +11,9 @@ logging.basicConfig(level=logging.INFO)
 class PineconeManager:
     def __init__(self, namespace: str):
         index_name = SharedSettings.PINECONE_INDEX_NAME
-        openai_api_key = SharedSettings.OPENAI_API_KEY
+        google_api_key = SharedSettings.GOOGLE_API_KEY
 
-        if not openai_api_key or not index_name:
+        if not google_api_key or not index_name:
             logger.error("Missing required environment variables")
             raise ValueError("PINECONE_API_KEY e PINECONE_INDEX_NAME must be defined at .env")
 
@@ -28,15 +27,16 @@ class PineconeManager:
         self.pinecone = Pinecone(api_key=SharedSettings.PINECONE_API_KEY)
         self.index_name = index_name
 
-        if not openai_api_key:
+        if not google_api_key:
             logger.error("OpenAI API key not provided")
             raise ValueError("OpenAI API key was not received by PineconeManager.")
 
         logger.info("Setting up OpenAI embeddings")
-        self.embeddings = OpenAIEmbeddings(
-            model="text-embedding-3-small",
-            openai_api_key=openai_api_key
-        )
+        self.embeddings = (GoogleGenerativeAIEmbeddings
+            (
+            model="models/embedding-001",
+            google_api_key=google_api_key
+        ))
 
         logger.info("Setting up text splitter")
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -73,7 +73,7 @@ class PineconeManager:
             logger.info(f"Creating index {self.index_name}...")
             self.pinecone.create_index(
                 name=self.index_name,
-                dimension=1536,
+                dimension=768,
                 metric='cosine',
                 spec=ServerlessSpec(cloud='aws', region='us-east-1')
             )

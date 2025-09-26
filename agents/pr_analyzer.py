@@ -35,7 +35,6 @@ class PRAnalyzerAgent:
         workflow.add_node("generate_summary", self._generate_summary)
         workflow.add_node("finalize", self._finalize_analysis)
 
-        # Define o fluxo
         workflow.set_entry_point("collect_data")
 
         # Fluxo linear com verificações condicionais
@@ -73,13 +72,10 @@ class PRAnalyzerAgent:
             return state
 
         try:
-            # Prepara contexto para o LLM
             security_prompt = self._build_security_prompt(state)
 
-            # Chama o LLM
             response = await self.llm.ainvoke([HumanMessage(content=security_prompt)])
 
-            # Processa resposta
             security_result = self._parse_security_analysis(response.content)
             state.analysis_results["security"] = security_result
 
@@ -140,7 +136,6 @@ class PRAnalyzerAgent:
             tests_result = self._parse_tests_analysis(response.content)
             state.analysis_results["tests"] = tests_result
 
-            # Estima cobertura de testes
             state.test_coverage_estimated = tests_result.score * 10  # Converte score para %
 
             state.log("Análise de testes concluída")
@@ -159,7 +154,6 @@ class PRAnalyzerAgent:
             summary_prompt = self._build_summary_prompt(state)
             response = await self.llm.ainvoke([HumanMessage(content=summary_prompt)])
 
-            # Calcula score geral
             scores = [result.score for result in state.analysis_results.values()]
             state.overall_score = sum(scores) / len(scores) if scores else 0.0
 
@@ -182,11 +176,11 @@ class PRAnalyzerAgent:
         """Constrói prompt para análise de segurança"""
         files_context = ""
 
-        for file_change in state.files_changed[:10]:  # Limita a 10 arquivos
+        for file_change in state.files_changed[:10]:
             if file_change.after_content:
                 files_context += f"\n## Arquivo: {file_change.filename}\n"
                 files_context += f"Status: {file_change.status}\n"
-                files_context += f"```\n{file_change.after_content[:2000]}```\n"  # Limita conteúdo
+                files_context += f"```\n{file_change.after_content[:2000]}```\n"
 
         return f"""
 Você é um especialista em segurança de aplicações. Analise as mudanças neste Pull Request:
@@ -408,14 +402,12 @@ Mantenha o tom profissional e construtivo.
 
     async def analyze_pr(self, repo_owner: str, repo_name: str, pr_number: int) -> PRState:
         """Método principal para analisar um PR"""
-        # Cria estado inicial
         initial_state = PRState(
             repo_owner=repo_owner,
             repo_name=repo_name,
             pr_number=pr_number
         )
 
-        # Executa o grafo
         result = await self.graph.ainvoke(initial_state)
 
         return result

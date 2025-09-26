@@ -25,6 +25,9 @@ var/
 MANIFEST
 
 # Virtual environments
+env
+.env/
+.env
 venv/
 ENV/
 env/
