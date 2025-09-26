@@ -1,413 +1,317 @@
-import asyncio
+import logging
+import json
+import re
 from typing import Dict, Any, List
-from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolExecutor
-from langchain_anthropic import ChatAnthropic
-from langchain.schema import HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage
 
-from ..models.pr_state import PRState, AnalysisStatus, AnalysisResult
-from ..tools.github_tools import GitHubToolsManager
+from messages import AnalyzerAgent
+from settings import SharedSettings
+from models.pr_state import PRState
+from schemas import AnalyzerResult, ModuleAnalysis, CategoryAnalysis, Recommendation, ResearchSource
 
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    force=True
+)
+logger = logging.getLogger(__name__)
 
-class PRAnalyzerAgent:
-    """Agent principal para análise de Pull Requests usando LangGraph"""
+llm = ChatGoogleGenerativeAI(
+    model=SharedSettings.GEMINI_MODEL,
+    temperature=SharedSettings.GEMINI_TEMPERATURE,
+    google_api_key=SharedSettings.GEMINI_API_KEY,
+    convert_system_message_to_human=True
+)
 
-    def __init__(self, github_token: str, anthropic_api_key: str):
-        self.github_tools = GitHubToolsManager(github_token)
-        self.llm = ChatAnthropic(
-            model="claude-3-sonnet-20240229",
-            api_key=anthropic_api_key,
-            temperature=0.1
+async def analyzer_node(state: PRState) -> PRState:
+    """Nó do agente analisador que analisa cada módulo"""
+    logger.info("🔍 Iniciando análise de código dos módulos")
+    state.update_progress("Analisando módulos", 30.0)
+    
+    if not state.separator_result or not state.separator_result.modules:
+        state.add_error("Nenhum módulo encontrado para análise")
+        return state
+    
+    analyzer_results = []
+    
+    for i, module in enumerate(state.separator_result.modules):
+        try:
+            logger.info(f"📊 Analisando módulo {i+1}/{len(state.separator_result.modules)}: {module.name}")
+            
+            # Analisa o módulo
+            result = await analyze_module(state, module)
+            analyzer_results.append(result)
+            
+            progress = 30 + (i + 1) * 50 / len(state.separator_result.modules)
+            state.update_progress(f"Analisando módulo {module.name}", progress)
+            
+        except Exception as e:
+            error_msg = f"Erro ao analisar módulo {module.name}: {str(e)}"
+            state.add_error(error_msg)
+            logger.error(error_msg)
+    
+    state.analyzer_results = analyzer_results
+    state.log(f"✅ Análise concluída: {len(analyzer_results)} módulos analisados")
+    state.update_progress("Análise de módulos concluída", 80.0)
+    
+    return state
+
+async def analyze_module(state: PRState, module) -> AnalyzerResult:
+    """Analisa um módulo específico"""
+    
+    # Constrói o contexto dos arquivos do módulo
+    module_files_context = build_module_context(state, module)
+    
+    # Pesquisa informações relevantes
+    research_sources = await research_module_topics(module, module_files_context)
+    
+    # Constrói o prompt de análise
+    analysis_prompt = build_analysis_prompt(state, module, module_files_context, research_sources)
+    
+    # Executa a análise
+    messages = [HumanMessage(content=analysis_prompt)]
+    response = await llm.ainvoke(messages)
+    
+    # Parse do resultado
+    return parse_analyzer_response(response.content, module.id)
+
+def build_module_context(state: PRState, module) -> str:
+    """Constrói o contexto dos arquivos do módulo"""
+    context = f"**Módulo: {module.name}**\n"
+    context += f"Tipo: {module.type}\n"
+    context += f"Razão: {module.reason}\n"
+    context += f"Arquivos: {', '.join(module.files)}\n\n"
+    
+    # Encontra os arquivos do módulo no estado
+    module_files = []
+    for file_change in state.files_changed:
+        if file_change.filename in module.files:
+            module_files.append(file_change)
+    
+    for file_change in module_files:
+        context += f"\n## {file_change.filename}\n"
+        context += f"Status: {file_change.status}\n"
+        context += f"Mudanças: +{file_change.additions}/-{file_change.deletions}\n"
+        
+        if file_change.after_content:
+            context += f"Conteúdo:\n```\n{file_change.after_content}\n```\n"
+        
+        if file_change.patch:
+            context += f"Patch:\n```\n{file_change.patch}\n```\n"
+    
+    return context
+
+async def research_module_topics(module, context: str) -> List[ResearchSource]:
+    """Pesquisa informações relevantes para o módulo"""
+    research_sources = []
+    
+    try:
+        # Identifica tópicos para pesquisa baseado no contexto
+        research_topics = identify_research_topics(module, context)
+        
+        for topic in research_topics:
+            try:
+                # Pesquisa na documentação
+                doc_result = await search_documentation_topic(topic)
+                if doc_result:
+                    research_sources.append(ResearchSource(
+                        source="documentation",
+                        query=topic,
+                        findings=doc_result
+                    ))
+                
+                # Pesquisa no Google
+                google_results = await search_google_topic(topic)
+                if google_results:
+                    findings = format_google_findings(google_results)
+                    research_sources.append(ResearchSource(
+                        source="google",
+                        query=topic,
+                        findings=findings
+                    ))
+                    
+            except Exception as e:
+                logger.warning(f"Erro na pesquisa para tópico '{topic}': {e}")
+                continue
+                
+    except Exception as e:
+        logger.error(f"Erro na pesquisa de tópicos: {e}")
+    
+    return research_sources
+
+def identify_research_topics(module, context: str) -> List[str]:
+    """Identifica tópicos para pesquisa baseado no módulo"""
+    topics = []
+    
+    # Tópicos baseados no tipo de módulo
+    if module.type == "interactive":
+        topics.extend([
+            "clean code principles",
+            "SOLID principles",
+            "dependency injection patterns"
+        ])
+    elif module.type == "feature":
+        topics.extend([
+            "feature development best practices",
+            "code organization patterns",
+            "testing strategies"
+        ])
+    else:  # independent
+        topics.extend([
+            "single responsibility principle",
+            "code quality metrics",
+            "refactoring techniques"
+        ])
+    
+    # Tópicos baseados no conteúdo dos arquivos
+    if "test" in context.lower():
+        topics.append("unit testing best practices")
+    if "api" in context.lower():
+        topics.append("API design patterns")
+    if "database" in context.lower():
+        topics.append("database design patterns")
+    if "security" in context.lower():
+        topics.append("security best practices")
+    
+    return topics[:3]  # Limita a 3 tópicos para não sobrecarregar
+
+async def search_documentation_topic(topic: str) -> str:
+    """Pesquisa um tópico na documentação"""
+    try:
+        # Usa o namespace padrão para documentação
+        result = await search_informations.ainvoke({"query": topic, "namespace": "documentation"})
+        return result if result else ""
+    except Exception as e:
+        logger.warning(f"Erro na pesquisa de documentação: {e}")
+        return ""
+
+async def search_google_topic(topic: str) -> List[Dict]:
+    """Pesquisa um tópico no Google"""
+    try:
+        results = await search_google_informations.ainvoke({"query": f"{topic} best practices programming"})
+        return results if results else []
+    except Exception as e:
+        logger.warning(f"Erro na pesquisa do Google: {e}")
+        return []
+
+def format_google_findings(results: List[Dict]) -> str:
+    """Formata os resultados do Google para o contexto"""
+    findings = []
+    for result in results[:3]:  # Limita a 3 resultados
+        findings.append(f"- {result.get('title', 'Sem título')}: {result.get('snippet', 'Sem descrição')}")
+    return "\n".join(findings)
+
+def build_analysis_prompt(state: PRState, module, context: str, research_sources: List[ResearchSource]) -> str:
+    """Constrói o prompt de análise para o módulo"""
+    
+    research_context = ""
+    if research_sources:
+        research_context = "\n**Informações de pesquisa encontradas:**\n"
+        for source in research_sources:
+            research_context += f"\n- {source.source.upper()}: {source.query}\n{source.findings}\n"
+    
+    return f"""
+Analise este módulo de código seguindo as melhores práticas de clean code e SOLID principles.
+
+**Contexto do PR:**
+- Título: {state.pr_title}
+- Repositório: {state.repo_owner}/{state.repo_name}
+- Total de mudanças: +{state.total_additions}/-{state.total_deletions} linhas
+
+{context}
+
+{research_context}
+
+**Instruções de análise:**
+1. Avalie cada categoria (segurança, qualidade, performance, arquitetura, testes)
+2. Identifique problemas específicos e sugestões de melhoria
+3. Considere as informações de pesquisa fornecidas
+4. Seja específico sobre arquivos e linhas problemáticas
+5. Priorize as recomendações por importância
+
+Retorne APENAS um JSON válido seguindo a estrutura especificada no prompt do sistema.
+"""
+
+def parse_analyzer_response(content: str, module_id: str) -> AnalyzerResult:
+    """Parse da resposta do agente analisador"""
+    try:
+        # Tenta extrair JSON da resposta
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group())
+        else:
+            logger.warning("Não foi possível extrair JSON válido da análise")
+            return create_fallback_analysis(module_id)
+        
+        # Parse da análise
+        analysis_data = data.get("analysis", {})
+        categories = {}
+        
+        for category_name, category_data in analysis_data.get("categories", {}).items():
+            categories[category_name] = CategoryAnalysis(
+                score=category_data.get("score", 5.0),
+                issues=category_data.get("issues", []),
+                suggestions=category_data.get("suggestions", [])
+            )
+        
+        module_analysis = ModuleAnalysis(
+            overall_score=analysis_data.get("overall_score", 5.0),
+            categories=categories
         )
-        self.graph = self._build_graph()
-
-    def _build_graph(self) -> StateGraph:
-        """Constrói o grafo de estados do LangGraph"""
-
-        workflow = StateGraph(PRState)
-
-        # Define os nós do grafo
-        workflow.add_node("collect_data", self._collect_pr_data)
-        workflow.add_node("analyze_security", self._analyze_security)
-        workflow.add_node("analyze_quality", self._analyze_code_quality)
-        workflow.add_node("analyze_performance", self._analyze_performance)
-        workflow.add_node("analyze_tests", self._analyze_tests)
-        workflow.add_node("generate_summary", self._generate_summary)
-        workflow.add_node("finalize", self._finalize_analysis)
-
-        workflow.set_entry_point("collect_data")
-
-        # Fluxo linear com verificações condicionais
-        workflow.add_edge("collect_data", "analyze_security")
-        workflow.add_edge("analyze_security", "analyze_quality")
-        workflow.add_edge("analyze_quality", "analyze_performance")
-        workflow.add_edge("analyze_performance", "analyze_tests")
-        workflow.add_edge("analyze_tests", "generate_summary")
-        workflow.add_edge("generate_summary", "finalize")
-        workflow.add_edge("finalize", END)
-
-        return workflow.compile()
-
-    async def _collect_pr_data(self, state: PRState) -> PRState:
-        """Nó 1: Coleta dados básicos do PR"""
-        state.update_progress("Coletando dados do GitHub", 10.0)
-
-        try:
-            state = await self.github_tools.collect_pr_data(state)
-            state.status = AnalysisStatus.IN_PROGRESS
-            state.update_progress("Dados coletados com sucesso", 20.0)
-
-        except Exception as e:
-            state.add_error(f"Falha na coleta de dados: {str(e)}")
-            state.status = AnalysisStatus.FAILED
-
-        return state
-
-    async def _analyze_security(self, state: PRState) -> PRState:
-        """Nó 2: Análise de segurança"""
-        state.update_progress("Analisando segurança", 30.0)
-
-        if not state.files_changed:
-            state.log("Sem arquivos para análise de segurança")
-            return state
-
-        try:
-            security_prompt = self._build_security_prompt(state)
-
-            response = await self.llm.ainvoke([HumanMessage(content=security_prompt)])
-
-            security_result = self._parse_security_analysis(response.content)
-            state.analysis_results["security"] = security_result
-
-            state.log(f"Análise de segurança concluída: {len(security_result.issues)} issues")
-            state.update_progress("Segurança analisada", 40.0)
-
-        except Exception as e:
-            state.add_error(f"Erro na análise de segurança: {str(e)}")
-
-        return state
-
-    async def _analyze_code_quality(self, state: PRState) -> PRState:
-        """Nó 3: Análise de qualidade de código"""
-        state.update_progress("Analisando qualidade do código", 50.0)
-
-        try:
-            quality_prompt = self._build_quality_prompt(state)
-            response = await self.llm.ainvoke([HumanMessage(content=quality_prompt)])
-
-            quality_result = self._parse_quality_analysis(response.content)
-            state.analysis_results["quality"] = quality_result
-
-            state.log(f"Análise de qualidade concluída: score {quality_result.score}")
-            state.update_progress("Qualidade analisada", 60.0)
-
-        except Exception as e:
-            state.add_error(f"Erro na análise de qualidade: {str(e)}")
-
-        return state
-
-    async def _analyze_performance(self, state: PRState) -> PRState:
-        """Nó 4: Análise de performance"""
-        state.update_progress("Analisando performance", 70.0)
-
-        try:
-            performance_prompt = self._build_performance_prompt(state)
-            response = await self.llm.ainvoke([HumanMessage(content=performance_prompt)])
-
-            performance_result = self._parse_performance_analysis(response.content)
-            state.analysis_results["performance"] = performance_result
-
-            state.log("Análise de performance concluída")
-            state.update_progress("Performance analisada", 80.0)
-
-        except Exception as e:
-            state.add_error(f"Erro na análise de performance: {str(e)}")
-
-        return state
-
-    async def _analyze_tests(self, state: PRState) -> PRState:
-        """Nó 5: Análise de testes"""
-        state.update_progress("Analisando testes", 85.0)
-
-        try:
-            tests_prompt = self._build_tests_prompt(state)
-            response = await self.llm.ainvoke([HumanMessage(content=tests_prompt)])
-
-            tests_result = self._parse_tests_analysis(response.content)
-            state.analysis_results["tests"] = tests_result
-
-            state.test_coverage_estimated = tests_result.score * 10  # Converte score para %
-
-            state.log("Análise de testes concluída")
-            state.update_progress("Testes analisados", 90.0)
-
-        except Exception as e:
-            state.add_error(f"Erro na análise de testes: {str(e)}")
-
-        return state
-
-    async def _generate_summary(self, state: PRState) -> PRState:
-        """Nó 6: Gera resumo final"""
-        state.update_progress("Gerando resumo final", 95.0)
-
-        try:
-            summary_prompt = self._build_summary_prompt(state)
-            response = await self.llm.ainvoke([HumanMessage(content=summary_prompt)])
-
-            scores = [result.score for result in state.analysis_results.values()]
-            state.overall_score = sum(scores) / len(scores) if scores else 0.0
-
-            state.log(f"Score geral: {state.overall_score:.1f}/10")
-
-        except Exception as e:
-            state.add_error(f"Erro ao gerar resumo: {str(e)}")
-
-        return state
-
-    async def _finalize_analysis(self, state: PRState) -> PRState:
-        """Nó 7: Finaliza análise"""
-        state.update_progress("Análise concluída", 100.0)
-        state.status = AnalysisStatus.COMPLETED
-        state.log("✅ Análise do PR concluída com sucesso!")
-
-        return state
-
-    def _build_security_prompt(self, state: PRState) -> str:
-        """Constrói prompt para análise de segurança"""
-        files_context = ""
-
-        for file_change in state.files_changed[:10]:
-            if file_change.after_content:
-                files_context += f"\n## Arquivo: {file_change.filename}\n"
-                files_context += f"Status: {file_change.status}\n"
-                files_context += f"```\n{file_change.after_content[:2000]}```\n"
-
-        return f"""
-Você é um especialista em segurança de aplicações. Analise as mudanças neste Pull Request:
-
-**PR:** {state.pr_title}
-**Repositório:** {state.repo_owner}/{state.repo_name}
-**Arquivos alterados:** {len(state.files_changed)}
-
-{files_context}
-
-Por favor, identifique:
-1. Vulnerabilidades de segurança
-2. Problemas de validação de input
-3. Exposição de dados sensíveis
-4. Problemas de autenticação/autorização
-5. Configurações inseguras
-
-Para cada issue encontrado, forneça:
-- Severidade (low, medium, high, critical)
-- Descrição detalhada
-- Localização (arquivo e linha se possível)
-- Sugestão de correção
-
-Responda em formato JSON estruturado.
-"""
-
-    def _build_quality_prompt(self, state: PRState) -> str:
-        """Constrói prompt para análise de qualidade"""
-        return f"""
-Analise a qualidade do código neste PR:
-
-**PR:** {state.pr_title}
-**Arquivos:** {len(state.files_changed)} alterados
-
-Avalie:
-1. Legibilidade e clareza
-2. Complexidade ciclomática
-3. Duplicação de código
-4. Aderência a padrões
-5. Estrutura e organização
-6. Documentação
-
-Forneça um score de 0-10 e sugestões específicas de melhoria.
-Responda em JSON estruturado.
-"""
-
-    def _build_performance_prompt(self, state: PRState) -> str:
-        """Constrói prompt para análise de performance"""
-        return f"""
-Analise o impacto de performance deste PR:
-
-**PR:** {state.pr_title}
-**Mudanças:** +{state.total_additions}/-{state.total_deletions} linhas
-
-Identifique:
-1. Possíveis gargalos de performance
-2. Uso ineficiente de recursos
-3. Algoritmos sub-ótimos
-4. Problemas de memória
-5. I/O desnecessário
-
-Score de 0-10 e sugestões de otimização.
-Responda em JSON estruturado.
-"""
-
-    def _build_tests_prompt(self, state: PRState) -> str:
-        """Constrói prompt para análise de testes"""
-        test_files = [f for f in state.files_changed if 'test' in f.filename.lower()]
-
-        return f"""
-Analise a cobertura e qualidade dos testes neste PR:
-
-**PR:** {state.pr_title}
-**Arquivos de teste:** {len(test_files)} encontrados
-**Total de arquivos:** {len(state.files_changed)}
-
-Avalie:
-1. Cobertura de código das mudanças
-2. Qualidade dos casos de teste
-3. Testes de edge cases
-4. Testes de integração necessários
-5. Mocks e fixtures adequados
-
-Estime um score de cobertura de 0-10.
-Responda em JSON estruturado.
-"""
-
-    def _build_summary_prompt(self, state: PRState) -> str:
-        """Constrói prompt para resumo final"""
-        results_summary = ""
-        for category, result in state.analysis_results.items():
-            results_summary += f"- {category.title()}: {result.score}/10 ({len(result.issues)} issues)\n"
-
-        return f"""
-Gere um resumo executivo desta análise de PR:
-
-**PR:** {state.pr_title}
-**Autor:** {state.pr_author}
-**Análises realizadas:**
-{results_summary}
-
-**Erros encontrados:** {len(state.errors)}
-
-Crie um resumo conciso destacando:
-1. Principais pontos positivos
-2. Issues críticos que precisam atenção
-3. Recomendações prioritárias
-4. Aprovação recomendada (sim/não/com ressalvas)
-
-Mantenha o tom profissional e construtivo.
-"""
-
-    def _parse_security_analysis(self, content: str) -> AnalysisResult:
-        """Parse da resposta de análise de segurança"""
-        # Implementação simplificada - em produção, usar parser JSON robusto
-        try:
-            import json
-            import re
-
-            # Tenta extrair JSON da resposta
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
-                # Fallback para parsing baseado em texto
-                data = {"score": 7.0, "issues": [], "summary": content[:200]}
-
-            return AnalysisResult(
-                category="security",
-                score=data.get("score", 7.0),
-                issues=data.get("issues", []),
-                suggestions=data.get("suggestions", []),
-                summary=data.get("summary", "Análise de segurança concluída")
+        
+        # Parse das recomendações
+        recommendations = []
+        for rec_data in data.get("recommendations", []):
+            recommendation = Recommendation(
+                priority=rec_data.get("priority", "medium"),
+                category=rec_data.get("category", "quality"),
+                description=rec_data.get("description", ""),
+                suggestion=rec_data.get("suggestion", ""),
+                files=rec_data.get("files", []),
+                lines=rec_data.get("lines")
             )
-        except Exception:
-            return AnalysisResult(
-                category="security",
-                score=5.0,
-                summary="Erro no parsing da análise de segurança"
+            recommendations.append(recommendation)
+        
+        # Parse das fontes de pesquisa
+        research_sources = []
+        for source_data in data.get("research_sources", []):
+            source = ResearchSource(
+                source=source_data.get("source", "unknown"),
+                query=source_data.get("query", ""),
+                findings=source_data.get("findings", "")
             )
-
-    def _parse_quality_analysis(self, content: str) -> AnalysisResult:
-        """Parse da resposta de análise de qualidade"""
-        try:
-            import json
-            import re
-
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
-                data = {"score": 6.0, "issues": [], "summary": content[:200]}
-
-            return AnalysisResult(
-                category="quality",
-                score=data.get("score", 6.0),
-                issues=data.get("issues", []),
-                suggestions=data.get("suggestions", []),
-                summary=data.get("summary", "Análise de qualidade concluída")
-            )
-        except Exception:
-            return AnalysisResult(
-                category="quality",
-                score=5.0,
-                summary="Erro no parsing da análise de qualidade"
-            )
-
-    def _parse_performance_analysis(self, content: str) -> AnalysisResult:
-        """Parse da resposta de análise de performance"""
-        try:
-            import json
-            import re
-
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
-                data = {"score": 8.0, "issues": [], "summary": content[:200]}
-
-            return AnalysisResult(
-                category="performance",
-                score=data.get("score", 8.0),
-                issues=data.get("issues", []),
-                suggestions=data.get("suggestions", []),
-                summary=data.get("summary", "Análise de performance concluída")
-            )
-        except Exception:
-            return AnalysisResult(
-                category="performance",
-                score=7.0,
-                summary="Erro no parsing da análise de performance"
-            )
-
-    def _parse_tests_analysis(self, content: str) -> AnalysisResult:
-        """Parse da resposta de análise de testes"""
-        try:
-            import json
-            import re
-
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                data = json.loads(json_match.group())
-            else:
-                data = {"score": 5.0, "issues": [], "summary": content[:200]}
-
-            return AnalysisResult(
-                category="tests",
-                score=data.get("score", 5.0),
-                issues=data.get("issues", []),
-                suggestions=data.get("suggestions", []),
-                summary=data.get("summary", "Análise de testes concluída")
-            )
-        except Exception:
-            return AnalysisResult(
-                category="tests",
-                score=4.0,
-                summary="Erro no parsing da análise de testes"
-            )
-
-    async def analyze_pr(self, repo_owner: str, repo_name: str, pr_number: int) -> PRState:
-        """Método principal para analisar um PR"""
-        initial_state = PRState(
-            repo_owner=repo_owner,
-            repo_name=repo_name,
-            pr_number=pr_number
+            research_sources.append(source)
+        
+        return AnalyzerResult(
+            module_id=module_id,
+            analysis=module_analysis,
+            recommendations=recommendations,
+            research_sources=research_sources
         )
+        
+    except Exception as e:
+        logger.error(f"Erro ao fazer parse da análise: {e}")
+        return create_fallback_analysis(module_id)
 
-        result = await self.graph.ainvoke(initial_state)
-
-        return result
+def create_fallback_analysis(module_id: str) -> AnalyzerResult:
+    """Cria análise de fallback quando o parsing falha"""
+    categories = {
+        "security": CategoryAnalysis(score=5.0, issues=[], suggestions=[]),
+        "quality": CategoryAnalysis(score=5.0, issues=[], suggestions=[]),
+        "performance": CategoryAnalysis(score=5.0, issues=[], suggestions=[]),
+        "architecture": CategoryAnalysis(score=5.0, issues=[], suggestions=[]),
+        "tests": CategoryAnalysis(score=5.0, issues=[], suggestions=[])
+    }
+    
+    module_analysis = ModuleAnalysis(
+        overall_score=5.0,
+        categories=categories
+    )
+    
+    return AnalyzerResult(
+        module_id=module_id,
+        analysis=module_analysis,
+        recommendations=[],
+        research_sources=[]
+    )
