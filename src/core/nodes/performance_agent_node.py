@@ -1,17 +1,13 @@
-import logging
 import json
+import logging
 from typing import Dict, Any
 
-from src.core.state import PRAnalysisState
-from src.providers.agents import AgentManager
-
-from src.providers.prompts.security import Security
+from src.core import PRAnalysisState
+from src.providers import AgentManager
 
 logger = logging.getLogger(__name__)
 
-
-def security_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
-    logger.info("[NODE: security_analysis] Starting security analysis")
+def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = state.get("pr_data")
     if pr_data is None:
         error_msg = "Cannot analyze security: pr_data is None"
@@ -50,8 +46,8 @@ def security_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools="security_analysis_tool", agent_name="Security")
-        response = agent.invoke({"context": context})
+        agent = AgentManager.get_agents(tools="performance_analysis_tool", agent_name="Performance")
+        response = agent.ainvoke({"context": context})
         try:
             analysis_result = json.loads(response)
         except (json.JSONDecodeError, AttributeError):
