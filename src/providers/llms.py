@@ -1,7 +1,7 @@
-import os
-
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+
+from src.settings import Settings
 
 
 class LLMManager:
@@ -10,7 +10,7 @@ class LLMManager:
         return GoogleGenerativeAI(
             model=model,
             temperature=0.3,
-            api_key=os.getenv("GOOGLE_GENAI_API_KEY"),
+            api_key=Settings.GOOGLE_GENAI_API_KEY,
         )
 
         # return ChatOpenAI(
