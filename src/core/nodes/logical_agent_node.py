@@ -4,10 +4,11 @@ from typing import Dict, Any
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
+from src.providers.tools.shared_tools import search_informations
 
 logger = logging.getLogger(__name__)
 
-def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
+async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = state.get("pr_data")
     if pr_data is None:
         error_msg = "Cannot analyze security: pr_data is None"
@@ -46,15 +47,17 @@ def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools="logical_tools", agent_name="Logical")
-        response = agent.ainvoke({"context": context})
+        agent = AgentManager.get_agents(tools=[search_informations], agent_name="Logical")
+        response = await agent.ainvoke({"context": context})
+
+        analysis_text = response.content if hasattr(response, 'content') else str(response)
 
         try:
-            analysis_result = json.loads(response)
+            analysis_result = json.loads(analysis_text)
         except (json.JSONDecodeError, AttributeError):
-            analysis_result = {"raw_analysis": str(response), "format": "text"}
+            analysis_result = {"raw_analysis": analysis_text, "format": "text"}
 
-        return {"performance_analysis": analysis_result}
+        return {"logical_analysis": analysis_result}
     except Exception as e:
         error_msg = f"Error during security analysis: {str(e)}"
         logger.error(f"[NODE: security_analysis] {error_msg}")
