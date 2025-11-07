@@ -8,6 +8,7 @@ from src.providers.tools.shared_tools import search_informations
 
 logger = logging.getLogger(__name__)
 
+
 async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = state.get("pr_data")
     if pr_data is None:
@@ -47,10 +48,14 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools=[search_informations], agent_name="Logical")
+        agent = AgentManager.get_agents(
+            tools=[search_informations], agent_name="Logical"
+        )
         response = await agent.ainvoke({"context": context})
 
-        analysis_text = response.content if hasattr(response, 'content') else str(response)
+        analysis_text = (
+            response.content if hasattr(response, "content") else str(response)
+        )
 
         try:
             analysis_result = json.loads(analysis_text)

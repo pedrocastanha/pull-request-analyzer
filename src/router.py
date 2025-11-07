@@ -20,7 +20,9 @@ async def analyze_pr(request: AnalyzePRRequest):
         logger.info(f"[API] Creating initial state for PR #{request.pull_request_id}")
         initial_state = create_initial_state(request.pull_request_id)
 
-        logger.info(f"[API] Starting LangGraph workflow for PR #{request.pull_request_id}")
+        logger.info(
+            f"[API] Starting LangGraph workflow for PR #{request.pull_request_id}"
+        )
         result = await graph.ainvoke(initial_state)
 
         if result.get("error"):
@@ -30,7 +32,7 @@ async def analyze_pr(request: AnalyzePRRequest):
                 "message": "Failed to analyze PR",
                 "pr_id": request.pull_request_id,
                 "error": result["error"],
-                "analysis": None
+                "analysis": None,
             }
 
         reviewer_analysis = result.get("reviewer_analysis", {})
@@ -51,14 +53,16 @@ async def analyze_pr(request: AnalyzePRRequest):
                 "clean_code_analysis": result.get("clean_code_analysis"),
                 "logical_analysis": result.get("logical_analysis"),
                 "reviewer_analysis": reviewer_analysis,
-                "final_report": result.get("final_report")
+                "final_report": result.get("final_report"),
             },
-            "error": None
+            "error": None,
         }
 
     except Exception as e:
-        logger.error(f"[API] Unexpected error during PR analysis: {str(e)}", exc_info=True)
+        logger.error(
+            f"[API] Unexpected error during PR analysis: {str(e)}", exc_info=True
+        )
         raise HTTPException(
             status_code=500,
-            detail=f"Internal server error during PR analysis: {str(e)}"
+            detail=f"Internal server error during PR analysis: {str(e)}",
         )

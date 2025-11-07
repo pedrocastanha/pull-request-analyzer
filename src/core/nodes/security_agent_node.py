@@ -51,10 +51,14 @@ async def security_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools=[search_informations], agent_name="Security")
+        agent = AgentManager.get_agents(
+            tools=[search_informations], agent_name="Security"
+        )
         response = await agent.ainvoke({"context": context})
 
-        analysis_text = response.content if hasattr(response, 'content') else str(response)
+        analysis_text = (
+            response.content if hasattr(response, "content") else str(response)
+        )
 
         try:
             analysis_result = json.loads(analysis_text)

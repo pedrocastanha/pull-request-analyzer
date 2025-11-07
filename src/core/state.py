@@ -1,5 +1,6 @@
 from typing import TypedDict, Optional, Dict, List, Any
 
+
 class PRAnalysisState(TypedDict):
     pr_id: int
     pr_data: Optional[Dict[str, Any]]
@@ -11,6 +12,7 @@ class PRAnalysisState(TypedDict):
     reviewer_analysis: Optional[Dict[str, Any]]
     final_report: Optional[Dict[str, Any]]
     next_node: Optional[str]
+
 
 def create_initial_state(pr_id: int) -> PRAnalysisState:
     return {

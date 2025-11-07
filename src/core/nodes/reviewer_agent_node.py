@@ -38,19 +38,27 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     if security_analysis:
         context_parts.append("### 🔒 Security Analysis:")
-        context_parts.append(f"```json\n{json.dumps(security_analysis, indent=2)}\n```\n")
+        context_parts.append(
+            f"```json\n{json.dumps(security_analysis, indent=2)}\n```\n"
+        )
 
     if performance_analysis:
         context_parts.append("### ⚡ Performance Analysis:")
-        context_parts.append(f"```json\n{json.dumps(performance_analysis, indent=2)}\n```\n")
+        context_parts.append(
+            f"```json\n{json.dumps(performance_analysis, indent=2)}\n```\n"
+        )
 
     if clean_code_analysis:
         context_parts.append("### ✨ Clean Code Analysis:")
-        context_parts.append(f"```json\n{json.dumps(clean_code_analysis, indent=2)}\n```\n")
+        context_parts.append(
+            f"```json\n{json.dumps(clean_code_analysis, indent=2)}\n```\n"
+        )
 
     if logical_analysis:
         context_parts.append("### 🧠 Logical Analysis:")
-        context_parts.append(f"```json\n{json.dumps(logical_analysis, indent=2)}\n```\n")
+        context_parts.append(
+            f"```json\n{json.dumps(logical_analysis, indent=2)}\n```\n"
+        )
 
     context_parts.append("\n## Tarefa:")
     context_parts.append(
@@ -65,16 +73,23 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
         response = await agent.ainvoke({"context": context})
 
-        analysis_text = response.content if hasattr(response, 'content') else str(response)
+        analysis_text = (
+            response.content if hasattr(response, "content") else str(response)
+        )
 
         next_node = "END"
 
         analysis_text_lower = analysis_text.lower()
         if "security_agent" in analysis_text_lower or "security" in analysis_text_lower:
             next_node = "security_agent"
-        elif "performance_agent" in analysis_text_lower or "performance" in analysis_text_lower:
+        elif (
+            "performance_agent" in analysis_text_lower
+            or "performance" in analysis_text_lower
+        ):
             next_node = "performance_agent"
-        elif "clean_coder_agent" in analysis_text_lower or "clean" in analysis_text_lower:
+        elif (
+            "clean_coder_agent" in analysis_text_lower or "clean" in analysis_text_lower
+        ):
             next_node = "clean_coder_agent"
         elif "logical_agent" in analysis_text_lower or "logical" in analysis_text_lower:
             next_node = "logical_agent"
@@ -83,7 +98,7 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         return {
             "reviewer_analysis": {"review": analysis_text, "decision": next_node},
-            "next_node": next_node
+            "next_node": next_node,
         }
 
     except Exception as e:

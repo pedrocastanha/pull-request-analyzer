@@ -8,5 +8,6 @@ class AnalyzePRResponse(BaseModel):
     analysis: dict = None
     error: str = None
 
+
 class AnalyzePRRequest(BaseModel):
     pull_request_id: int

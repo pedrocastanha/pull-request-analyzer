@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 @tool
 def search_informations(query: str, namespace: str) -> str:
-    """Busca informações  """
+    """Busca informações"""
     try:
         logger.info(f"Searching informations for {query}")
         pinecone = PineconeManager(namespace)

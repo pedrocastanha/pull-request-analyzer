@@ -27,10 +27,7 @@ workflow.set_entry_point("fetch_pr_data")
 workflow.add_conditional_edges(
     "fetch_pr_data",
     should_continue_or_end,
-    {
-        "reviewer_agent": "security_agent",
-        "END": END
-    }
+    {"reviewer_agent": "security_agent", "END": END},
 )
 
 workflow.add_edge("security_agent", "performance_agent")
@@ -47,7 +44,7 @@ workflow.add_conditional_edges(
         "performance_agent": "performance_agent",
         "clean_coder_agent": "clean_coder_agent",
         "logical_agent": "logical_agent",
-    }
+    },
 )
 
 graph = workflow.compile()
