@@ -3,6 +3,7 @@ import os
 from langchain_google_genai import GoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
+
 class LLMManager:
     @staticmethod
     def get_openai_llm(model: str):

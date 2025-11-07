@@ -7,10 +7,7 @@ from src.utils.azure_requests import AzureManager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(
-    prefix="/azure/pr-analyzer",
-    tags=["PR Analyzer"]
-)
+router = APIRouter(prefix="/azure/pr-analyzer", tags=["PR Analyzer"])
 
 
 class AnalyzePRRequest(BaseModel):
@@ -28,14 +25,14 @@ async def analyze_pr(request: AnalyzePRRequest):
             return {
                 "status": "error",
                 "message": "Failed to fetch PR details from Azure DevOps",
-                "pr_id": request.pull_request_id
+                "pr_id": request.pull_request_id,
             }
 
         return {
             "status": "success",
             "message": "PR analysis completed successfully",
             "pr_id": request.pull_request_id,
-            "data": pr_data
+            "data": pr_data,
         }
 
     except Exception as e:

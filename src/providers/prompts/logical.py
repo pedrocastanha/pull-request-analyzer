@@ -1,4 +1,4 @@
-class Logical():
+class Logical:
     SYSTEM_PROMPT = """
 
 """

@@ -1,4 +1,4 @@
-class CleanCoder():
+class CleanCoder:
     SYSTEM_PROMPT = """
 
 """

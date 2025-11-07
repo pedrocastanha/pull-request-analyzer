@@ -1,4 +1,4 @@
-class Reviewer():
+class Reviewer:
     SYSTEM_PROMPT = """
     
 """

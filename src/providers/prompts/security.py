@@ -1,4 +1,4 @@
-class Security():
+class Security:
     SYSTEM_PROMPT = """
 
 """
