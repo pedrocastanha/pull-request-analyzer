@@ -46,14 +46,15 @@ def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools="performance_analysis_tool", agent_name="Performance")
+        agent = AgentManager.get_agents(tools="clean_coder_tools", agent_name="CleanCoder")
         response = agent.ainvoke({"context": context})
+
         try:
             analysis_result = json.loads(response)
         except (json.JSONDecodeError, AttributeError):
             analysis_result = {"raw_analysis": str(response), "format": "text"}
-
         return {"performance_analysis": analysis_result}
+
     except Exception as e:
         error_msg = f"Error during security analysis: {str(e)}"
         logger.error(f"[NODE: security_analysis] {error_msg}")
