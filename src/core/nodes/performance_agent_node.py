@@ -62,6 +62,11 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         except (json.JSONDecodeError, AttributeError):
             analysis_result = {"raw_analysis": analysis_text, "format": "text"}
 
+        logger.info(
+            f"[NODE: performance_analysis] ✓ Analysis complete. "
+            f"Result preview: {str(analysis_result)[:300]}..."
+        )
+
         return {"performance_analysis": analysis_result}
     except Exception as e:
         error_msg = f"Error during security analysis: {str(e)}"

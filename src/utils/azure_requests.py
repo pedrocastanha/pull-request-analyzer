@@ -19,7 +19,7 @@ class AzureManager:
         try:
             url = f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/pullrequests/{pr_id}/commits?api-version={Settings.AZURE_API_VERSION}"
 
-            logger.info(f"Requesting URL: {url}")
+            logger.debug(f"Requesting URL: {url}")
 
             response = requests.get(url, headers=headers)
             response.raise_for_status()
@@ -34,7 +34,7 @@ class AzureManager:
                 if not commit_id:
                     continue
 
-                logger.info(f"Processing commit {commit_id[:8]} from PR #{pr_id}")
+                logger.debug(f"Processing commit {commit_id[:8]} from PR #{pr_id}")
                 commit_details = AzureManager.process_commit_changes(commit_id)
 
                 if commit_details:
@@ -86,7 +86,7 @@ class AzureManager:
 
     @staticmethod
     def get_commit_changes(id: str):
-        logger.info(f"Fetching commit changes from Azure DevOps")
+        logger.debug(f"Fetching commit changes from Azure DevOps")
         try:
             url = (
                 f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/diffs/commits?api-version={Settings.AZURE_API_VERSION}&"
@@ -110,7 +110,7 @@ class AzureManager:
 
     @staticmethod
     def get_old_file_content(commonCommit: str, path: str) -> Optional[str]:
-        logger.info(f"Fetching old file content: {path} @ {commonCommit[:8]}")
+        logger.debug(f"Fetching old file content: {path} @ {commonCommit[:8]}")
         try:
             clean_path = path.lstrip("/")
             url = (
@@ -138,7 +138,7 @@ class AzureManager:
 
     @staticmethod
     def get_target_file_content(commitId: str, path: str) -> Optional[str]:
-        logger.info(f"Fetching target file content: {path} @ {commitId[:8]}")
+        logger.debug(f"Fetching target file content: {path} @ {commitId[:8]}")
         try:
             clean_path = path.lstrip("/")
             url = (
@@ -239,7 +239,7 @@ class AzureManager:
 
     @staticmethod
     def process_commit_changes(commit_id: str) -> Optional[Dict]:
-        logger.info(f"Processing commit {commit_id[:8]}...")
+        logger.debug(f"Processing commit {commit_id[:8]}...")
 
         changes_data = AzureManager.get_commit_changes(commit_id)
         if not changes_data:
@@ -268,7 +268,7 @@ class AzureManager:
                 logger.warning("Change without file path, skipping...")
                 continue
 
-            logger.info(f"Processing file: {file_path}")
+            logger.debug(f"Processing file: {file_path}")
 
             old_content = AzureManager.get_old_file_content(common_commit, file_path)
 

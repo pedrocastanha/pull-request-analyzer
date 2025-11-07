@@ -62,9 +62,9 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     context_parts.append("\n## Tarefa:")
     context_parts.append(
-        "Revise todas as análises acima. Se estiver satisfeito, retorne 'END'. "
-        "Se precisar de mais informações de um agent específico, retorne o nome do agent: "
-        "'security_agent', 'performance_agent', 'clean_coder_agent', ou 'logical_agent'."
+        "Analise todas as informações acima e gere comentários estruturados "
+        "por arquivo e linha para cada issue encontrado pelos agents. "
+        "Consolide issues duplicados e crie um relatório final."
     )
 
     context = "\n".join(context_parts)
@@ -77,29 +77,18 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             response.content if hasattr(response, "content") else str(response)
         )
 
-        next_node = "END"
+        try:
+            analysis_result = json.loads(analysis_text)
+        except (json.JSONDecodeError, AttributeError):
+            analysis_result = {"raw_analysis": analysis_text, "format": "text"}
 
-        analysis_text_lower = analysis_text.lower()
-        if "security_agent" in analysis_text_lower or "security" in analysis_text_lower:
-            next_node = "security_agent"
-        elif (
-            "performance_agent" in analysis_text_lower
-            or "performance" in analysis_text_lower
-        ):
-            next_node = "performance_agent"
-        elif (
-            "clean_coder_agent" in analysis_text_lower or "clean" in analysis_text_lower
-        ):
-            next_node = "clean_coder_agent"
-        elif "logical_agent" in analysis_text_lower or "logical" in analysis_text_lower:
-            next_node = "logical_agent"
+        comments_count = len(analysis_result.get("comments", []))
+        logger.info(
+            f"[NODE: reviewer_analysis] ✓ Generated {comments_count} comments. "
+            f"Result preview: {str(analysis_result)[:500]}..."
+        )
 
-        logger.info(f"[NODE: reviewer_analysis] Decision: next_node={next_node}")
-
-        return {
-            "reviewer_analysis": {"review": analysis_text, "decision": next_node},
-            "next_node": next_node,
-        }
+        return {"reviewer_analysis": analysis_result}
 
     except Exception as e:
         error_msg = f"Error during reviewer analysis: {str(e)}"

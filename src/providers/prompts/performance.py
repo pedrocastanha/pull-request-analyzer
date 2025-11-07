@@ -84,10 +84,10 @@ search_informations(
 Retorne um JSON estruturado:
 
 ```json
-{
+{{
     "performance_score": "excellent" | "good" | "needs_improvement" | "critical",
     "issues": [
-        {
+        {{
             "type": "N+1 Query Problem",
             "severity": "high",
             "file": "src/api/orders.py",
@@ -98,23 +98,23 @@ Retorne um JSON estruturado:
             "complexity": "O(n)",
             "recommendation": "Usar eager loading ou single query com JOIN",
             "suggested_code": "products = Product.query.filter(Product.id.in_(product_ids)).all()"
-        }
+        }}
     ],
     "optimizations": [
-        {
+        {{
             "type": "Caching Opportunity",
             "file": "src/utils/pricing.py",
             "line": 45,
             "description": "Cálculo repetido que poderia ser cacheado",
             "potential_gain": "Redução de 80% no tempo de cálculo"
-        }
+        }}
     ],
     "good_practices": [
         "Uso correto de índices em queries",
         "Paginação implementada adequadamente"
     ],
     "overall_assessment": "Resumo do impacto geral de performance do PR"
-}
+}}
 ```
 
 ## ⚠️ REGRAS IMPORTANTES:

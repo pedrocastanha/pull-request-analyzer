@@ -76,26 +76,26 @@ search_informations(
 Retorne um JSON estruturado:
 
 ```json
-{
+{{
     "severity": "critical" | "high" | "medium" | "low" | "none",
     "vulnerabilities": [
-        {
+        {{
             "type": "SQL Injection",
             "severity": "critical",
             "file": "src/api/users.py",
             "line": 45,
             "description": "Query SQL usando concatenação de strings sem sanitização",
-            "evidence": "query = f'SELECT * FROM users WHERE id={user_id}'",
+            "evidence": "query = f'SELECT * FROM users WHERE id={{user_id}}'",
             "recommendation": "Usar prepared statements ou ORM para evitar SQL injection",
             "reference": "OWASP A03:2021 - Injection"
-        }
+        }}
     ],
     "secure_practices": [
         "Uso correto de bcrypt para hashing de senhas",
         "Validação de input implementada corretamente"
     ],
     "overall_assessment": "Análise resumida da segurança geral do PR"
-}
+}}
 ```
 
 ## ⚠️ REGRAS IMPORTANTES:

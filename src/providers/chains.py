@@ -1,4 +1,4 @@
-from src.providers.prompts import PromptManager
+from src.providers.prompts_manager import PromptManager
 
 
 class ChainManager:

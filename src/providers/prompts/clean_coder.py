@@ -90,10 +90,10 @@ search_informations(
 Retorne um JSON estruturado:
 
 ```json
-{
+{{
     "code_quality_score": "excellent" | "good" | "needs_refactoring" | "poor",
     "smells": [
-        {
+        {{
             "type": "Long Method",
             "severity": "medium",
             "file": "src/services/order_processor.py",
@@ -104,7 +104,7 @@ Retorne um JSON estruturado:
             "violated_principle": "Single Responsibility Principle",
             "recommendation": "Extrair validação, cálculo e persistência em métodos separados",
             "suggested_refactoring": "Criar métodos: validate_order(), calculate_totals(), persist_order()"
-        }
+        }}
     ],
     "good_practices": [
         "Nomenclatura clara e consistente",
@@ -112,15 +112,15 @@ Retorne um JSON estruturado:
         "Funções pequenas e focadas"
     ],
     "refactoring_opportunities": [
-        {
+        {{
             "type": "Extract Method",
             "file": "src/utils/helpers.py",
             "line": 120,
             "description": "Bloco de código que poderia ser extraído para método reutilizável"
-        }
+        }}
     ],
     "overall_assessment": "Resumo da qualidade geral do código no PR"
-}
+}}
 ```
 
 ## ⚠️ REGRAS IMPORTANTES:

@@ -62,6 +62,11 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         except (json.JSONDecodeError, AttributeError):
             analysis_result = {"raw_analysis": analysis_text, "format": "text"}
 
+        logger.info(
+            f"[NODE: clean_code_analysis] ✓ Analysis complete. "
+            f"Result preview: {str(analysis_result)[:300]}..."
+        )
+
         return {"clean_code_analysis": analysis_result}
 
     except Exception as e:

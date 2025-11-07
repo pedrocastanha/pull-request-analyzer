@@ -1,7 +1,7 @@
 import logging
 
 from langchain_core.tools import tool
-from src.db.pinecone_manager import PineconeManager
+from src.utils.pinecone_manager import PineconeManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

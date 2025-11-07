@@ -1,5 +1,5 @@
-from chains import ChainManager
-from llms import LLMManager
+from src.providers.chains import ChainManager
+from src.providers.llms import LLMManager
 
 
 class AgentManager:

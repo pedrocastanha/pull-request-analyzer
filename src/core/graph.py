@@ -34,18 +34,7 @@ workflow.add_edge("security_agent", "performance_agent")
 workflow.add_edge("performance_agent", "clean_coder_agent")
 workflow.add_edge("clean_coder_agent", "logical_agent")
 workflow.add_edge("logical_agent", "reviewer_agent")
-
-workflow.add_conditional_edges(
-    "reviewer_agent",
-    route_reviewer_decision,
-    {
-        "END": END,
-        "security_agent": "security_agent",
-        "performance_agent": "performance_agent",
-        "clean_coder_agent": "clean_coder_agent",
-        "logical_agent": "logical_agent",
-    },
-)
+workflow.add_edge("reviewer_agent", END)
 
 graph = workflow.compile()
 
