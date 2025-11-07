@@ -1,40 +1,64 @@
 import logging
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from src.utils.azure_requests import AzureManager
+from src.core.graph import graph
+from src.core.state import create_initial_state
+from src.schemas import AnalyzePRResponse, AnalyzePRRequest
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/azure/pr-analyzer", tags=["PR Analyzer"])
 
 
-class AnalyzePRRequest(BaseModel):
-    pull_request_id: int = Field()
-
-
-@router.post("/analyze")
+@router.post("/analyze", response_model=AnalyzePRResponse)
 async def analyze_pr(request: AnalyzePRRequest):
-    logger.info(f"Received request to analyze PR: {request.pull_request_id}")
-    try:
-        logger.info("Starting PR analysis...")
+    logger.info(f"[API] Received request to analyze PR #{request.pull_request_id}")
 
-        pr_data = AzureManager.get_pr_details(request.pull_request_id)
-        if pr_data is None:
+    try:
+        logger.info(f"[API] Creating initial state for PR #{request.pull_request_id}")
+        initial_state = create_initial_state(request.pull_request_id)
+
+        logger.info(f"[API] Starting LangGraph workflow for PR #{request.pull_request_id}")
+        result = await graph.ainvoke(initial_state)
+
+        if result.get("error"):
+            logger.error(f"[API] Error during graph execution: {result['error']}")
             return {
                 "status": "error",
-                "message": "Failed to fetch PR details from Azure DevOps",
+                "message": "Failed to analyze PR",
                 "pr_id": request.pull_request_id,
+                "error": result["error"],
+                "analysis": None
             }
+
+        reviewer_analysis = result.get("reviewer_analysis", {})
+
+        logger.info(
+            f"[API] PR #{request.pull_request_id} analysis completed successfully. "
+            f"Comments generated: {len(reviewer_analysis.get('comments', []))}"
+        )
 
         return {
             "status": "success",
             "message": "PR analysis completed successfully",
             "pr_id": request.pull_request_id,
-            "data": pr_data,
+            "analysis": {
+                "pr_data": result.get("pr_data"),
+                "security_analysis": result.get("security_analysis"),
+                "performance_analysis": result.get("performance_analysis"),
+                "clean_code_analysis": result.get("clean_code_analysis"),
+                "logical_analysis": result.get("logical_analysis"),
+                "reviewer_analysis": reviewer_analysis,
+                "final_report": result.get("final_report")
+            },
+            "error": None
         }
 
     except Exception as e:
-        logger.error(f"Error during PR analysis: {str(e)}")
-        raise
+        logger.error(f"[API] Unexpected error during PR analysis: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error during PR analysis: {str(e)}"
+        )
