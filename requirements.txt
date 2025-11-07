@@ -9,3 +9,4 @@ langchain-google-genai
 langgraph
 python-dotenv
 black
+pinecone
