@@ -6,7 +6,7 @@ from src.settings import Settings
 
 class LLMManager:
     @staticmethod
-    def get_openai_llm(model: str):
+    def get_llm(model: str):
         return GoogleGenerativeAI(
             model=model,
             temperature=0.3,
