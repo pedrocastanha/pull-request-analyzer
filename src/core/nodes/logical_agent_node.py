@@ -13,7 +13,7 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = state.get("pr_data")
     if pr_data is None:
         error_msg = "Cannot analyze security: pr_data is None"
-        logger.error(f"[NODE: security_analysis] {error_msg}")
+        logger.error(f"[NODE: logical_analysis] {error_msg}")
         return {"error": error_msg}
 
     pr_id = pr_data["pr_id"]
@@ -21,7 +21,7 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     commits = pr_data["commits"]
 
     logger.info(
-        f"[NODE: security_analysis] Analyzing PR #{pr_id} "
+        f"[NODE: logical_analysis] Analyzing PR #{pr_id} "
         f"({total_commits} commits, {pr_data['summary']['total_files_changed']} files)"
     )
 
@@ -69,6 +69,6 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         return {"logical_analysis": analysis_result}
     except Exception as e:
-        error_msg = f"Error during security analysis: {str(e)}"
-        logger.error(f"[NODE: security_analysis] {error_msg}")
+        error_msg = f"Error during logical analysis: {str(e)}"
+        logger.error(f"[NODE: logical_analysis] {error_msg}")
         return {"error": error_msg}

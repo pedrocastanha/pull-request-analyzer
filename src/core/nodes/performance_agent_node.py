@@ -13,7 +13,7 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = state.get("pr_data")
     if pr_data is None:
         error_msg = "Cannot analyze security: pr_data is None"
-        logger.error(f"[NODE: security_analysis] {error_msg}")
+        logger.error(f"[NODE: performance_analysis] {error_msg}")
         return {"error": error_msg}
 
     pr_id = pr_data["pr_id"]
@@ -21,7 +21,7 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     commits = pr_data["commits"]
 
     logger.info(
-        f"[NODE: security_analysis] Analyzing PR #{pr_id} "
+        f"[NODE: performance_analysis] Analyzing PR #{pr_id} "
         f"({total_commits} commits, {pr_data['summary']['total_files_changed']} files)"
     )
 
@@ -51,11 +51,14 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         agent = AgentManager.get_agents(
             tools=[search_informations], agent_name="Performance"
         )
+        logger.info(f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars")
         response = await agent.ainvoke({"context": context})
 
         analysis_text = (
             response.content if hasattr(response, "content") else str(response)
         )
+
+        logger.info(f"[NODE: performance_analysis] Received response, length: {len(analysis_text)} chars")
 
         try:
             analysis_result = json.loads(analysis_text)
@@ -69,6 +72,6 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         return {"performance_analysis": analysis_result}
     except Exception as e:
-        error_msg = f"Error during security analysis: {str(e)}"
-        logger.error(f"[NODE: security_analysis] {error_msg}")
+        error_msg = f"Error during performance analysis: {str(e)}"
+        logger.error(f"[NODE: performance_analysis] {error_msg}")
         return {"error": error_msg}
