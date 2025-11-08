@@ -14,60 +14,94 @@ headers = {
 
 class AzureManager:
     @staticmethod
-    def get_pr_details(pr_id: int) -> Optional[Dict]:
-        logger.info(f"Fetching PR #{pr_id} details from Azure DevOps")
+    def get_pr_consolidated_changes(pr_id: int) -> Optional[Dict]:
+        logger.info(f"Fetching consolidated changes for PR #{pr_id} (branch comparison)")
         try:
-            url = f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/pullrequests/{pr_id}/commits?api-version={Settings.AZURE_API_VERSION}"
+            pr_url = f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/pullrequests/{pr_id}?api-version={Settings.AZURE_API_VERSION}"
 
-            logger.debug(f"Requesting URL: {url}")
+            logger.debug(f"Fetching PR info: {pr_url}")
+            pr_response = requests.get(pr_url, headers=headers)
+            pr_response.raise_for_status()
+            pr_info = pr_response.json()
 
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            data = response.json()
+            source_ref = pr_info.get("sourceRefName")
+            target_ref = pr_info.get("targetRefName")
 
-            commits = data.get("value", [])
-            logger.info(f"Found {len(commits)} commit(s) in PR #{pr_id}")
+            if not source_ref or not target_ref:
+                logger.error(f"Missing branch references in PR #{pr_id}")
+                return None
 
-            processed_commits = []
-            for commit in commits:
-                commit_id = commit.get("commitId")
-                if not commit_id:
+            source_branch = source_ref.replace("refs/heads/", "")
+            target_branch = target_ref.replace("refs/heads/", "")
+
+            logger.info(
+                f"Comparing branches: {source_branch} → {target_branch}"
+            )
+
+            diff_url = (
+                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/diffs/commits?"
+                f"api-version={Settings.AZURE_API_VERSION}&"
+                f"baseVersionType=branch&baseVersion={target_branch}&"
+                f"targetVersionType=branch&targetVersion={source_branch}&"
+                f"diffCommonCommit=true&$top=1000"
+            )
+
+            logger.debug(f"Fetching branch diff: {diff_url}")
+            diff_response = requests.get(diff_url, headers=headers)
+            diff_response.raise_for_status()
+            changes_data = diff_response.json()
+
+            file_changes = [
+                change
+                for change in changes_data.get("changes", [])
+                if not change.get("item", {}).get("isFolder", False)
+            ]
+
+            logger.info(f"Found {len(file_changes)} file(s) changed in PR #{pr_id}")
+
+            processed_files = []
+            common_commit = changes_data.get("commonCommit")
+            target_commit = changes_data.get("targetCommit")
+
+            for change in file_changes:
+                item = change.get("item", {})
+                file_path = item.get("path")
+
+                if not file_path:
+                    logger.warning("Change without file path, skipping...")
                     continue
 
-                logger.debug(f"Processing commit {commit_id[:8]} from PR #{pr_id}")
-                commit_details = AzureManager.process_commit_changes(commit_id)
+                logger.debug(f"Processing file: {file_path}")
 
-                if commit_details:
-                    commit_details["author"] = commit.get("author", {}).get("name")
-                    commit_details["comment"] = commit.get("comment")
-                    commit_details["committer"] = commit.get("committer", {}).get(
-                        "name"
-                    )
-                    processed_commits.append(commit_details)
+                old_content = AzureManager.get_old_file_content(common_commit, file_path)
+                new_content = AzureManager.get_target_file_content(target_commit, file_path)
 
-            total_files = sum(c["summary"]["total_files"] for c in processed_commits)
-            total_additions = sum(
-                c["summary"]["total_additions"] for c in processed_commits
-            )
-            total_deletions = sum(
-                c["summary"]["total_deletions"] for c in processed_commits
-            )
+                diff_result = AzureManager.calculate_diff(
+                    old_content, new_content, file_path
+                )
+
+                diff_result["change_type_azure"] = change.get("changeType")
+                diff_result["object_id"] = item.get("objectId")
+
+                processed_files.append(diff_result)
+
+            total_additions = sum(f["additions"] for f in processed_files)
+            total_deletions = sum(f["deletions"] for f in processed_files)
+            total_files = len(processed_files)
 
             result = {
                 "pr_id": pr_id,
-                "total_commits": len(processed_commits),
-                "commits": processed_commits,
-                "summary": {
-                    "total_files_changed": total_files,
-                    "total_additions": total_additions,
-                    "total_deletions": total_deletions,
-                    "total_commits": len(processed_commits),
-                },
+                "source_branch": source_branch,
+                "target_branch": target_branch,
+                "total_files": total_files,
+                "total_additions": total_additions,
+                "total_deletions": total_deletions,
+                "files": processed_files
             }
 
             logger.info(
-                f"✓ PR #{pr_id} processed: {len(processed_commits)} commits, "
-                f"{total_files} files, +{total_additions}/-{total_deletions}"
+                f"✓ PR #{pr_id} consolidated ({source_branch} → {target_branch}): "
+                f"{total_files} files, +{total_additions}/-{total_deletions} lines"
             )
 
             return result
@@ -81,7 +115,7 @@ class AzureManager:
             logger.error(f"Request error fetching PR #{pr_id}: {str(e)}")
             return None
         except Exception as e:
-            logger.error(f"Unexpected error fetching PR #{pr_id}: {str(e)}")
+            logger.error(f"Unexpected error fetching PR #{pr_id}: {str(e)}", exc_info=True)
             return None
 
     @staticmethod
@@ -236,83 +270,3 @@ class AzureManager:
             "additions": additions,
             "deletions": deletions,
         }
-
-    @staticmethod
-    def process_commit_changes(commit_id: str) -> Optional[Dict]:
-        logger.debug(f"Processing commit {commit_id[:8]}...")
-
-        changes_data = AzureManager.get_commit_changes(commit_id)
-        if not changes_data:
-            logger.error(f"Failed to fetch changes for commit {commit_id}")
-            return None
-
-        file_changes = [
-            change
-            for change in changes_data.get("changes", [])
-            if not change.get("item", {}).get("isFolder", False)
-        ]
-
-        logger.info(
-            f"Found {len(file_changes)} file(s) changed in commit {commit_id[:8]}"
-        )
-
-        processed_files = []
-        common_commit = changes_data.get("commonCommit")
-        target_commit = changes_data.get("targetCommit")
-
-        for change in file_changes:
-            item = change.get("item", {})
-            file_path = item.get("path")
-
-            if not file_path:
-                logger.warning("Change without file path, skipping...")
-                continue
-
-            logger.debug(f"Processing file: {file_path}")
-
-            old_content = AzureManager.get_old_file_content(common_commit, file_path)
-
-            new_content = AzureManager.get_target_file_content(target_commit, file_path)
-
-            diff_result = AzureManager.calculate_diff(
-                old_content, new_content, file_path
-            )
-
-            diff_result["change_type_azure"] = change.get(
-                "changeType"
-            )  # 'add', 'edit', 'delete'
-            diff_result["object_id"] = item.get("objectId")
-
-            processed_files.append(diff_result)
-
-        total_additions = sum(f["additions"] for f in processed_files)
-        total_deletions = sum(f["deletions"] for f in processed_files)
-        total_files = len(processed_files)
-
-        result = {
-            "commit_id": commit_id,
-            "common_commit": common_commit,
-            "target_commit": target_commit,
-            "files_changed": processed_files,
-            "summary": {
-                "total_files": total_files,
-                "total_additions": total_additions,
-                "total_deletions": total_deletions,
-                "files_added": sum(
-                    1 for f in processed_files if f["change_type"] == "added"
-                ),
-                "files_deleted": sum(
-                    1 for f in processed_files if f["change_type"] == "deleted"
-                ),
-                "files_modified": sum(
-                    1 for f in processed_files if f["change_type"] == "modified"
-                ),
-            },
-        }
-
-        logger.info(
-            f"✓ Commit {commit_id[:8]} processed: "
-            f"{total_files} files, +{total_additions}/-{total_deletions}"
-        )
-
-        return result

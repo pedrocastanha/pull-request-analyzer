@@ -81,41 +81,35 @@ search_informations(
 
 ## 📤 FORMATO DE RESPOSTA:
 
-Retorne um JSON estruturado:
+Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
 {{
-    "performance_score": "excellent" | "good" | "needs_improvement" | "critical",
     "issues": [
         {{
-            "type": "N+1 Query Problem",
-            "severity": "high",
             "file": "src/api/orders.py",
             "line": 78,
+            "final_line": 79,
+            "severity": "high",
+            "type": "N+1 Query Problem",
             "description": "Loop executando query para cada item, causando 100+ queries",
-            "evidence": "for item in items:\n    product = Product.query.get(item.product_id)",
+            "evidence": "for item in items:\\n    product = Product.query.get(item.product_id)",
             "impact": "Tempo de resposta de 5s para 100 items",
             "complexity": "O(n)",
             "recommendation": "Usar eager loading ou single query com JOIN",
-            "suggested_code": "products = Product.query.filter(Product.id.in_(product_ids)).all()"
+            "example": "products = Product.query.filter(Product.id.in_(product_ids)).all()",
+            "potential_gain": "Redução de 80% no tempo de resposta"
         }}
-    ],
-    "optimizations": [
-        {{
-            "type": "Caching Opportunity",
-            "file": "src/utils/pricing.py",
-            "line": 45,
-            "description": "Cálculo repetido que poderia ser cacheado",
-            "potential_gain": "Redução de 80% no tempo de cálculo"
-        }}
-    ],
-    "good_practices": [
-        "Uso correto de índices em queries",
-        "Paginação implementada adequadamente"
-    ],
-    "overall_assessment": "Resumo do impacto geral de performance do PR"
+    ]
 }}
 ```
+
+**IMPORTANTE:**
+- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- Inclua `complexity` (Big O) quando relevante
+- Estime `potential_gain` quando possível
 
 ## ⚠️ REGRAS IMPORTANTES:
 

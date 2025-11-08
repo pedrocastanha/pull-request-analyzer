@@ -87,41 +87,35 @@ search_informations(
 
 ## 📤 FORMATO DE RESPOSTA:
 
-Retorne um JSON estruturado:
+Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
 {{
-    "code_quality_score": "excellent" | "good" | "needs_refactoring" | "poor",
-    "smells": [
+    "issues": [
         {{
-            "type": "Long Method",
-            "severity": "medium",
             "file": "src/services/order_processor.py",
             "line": 45,
-            "method": "process_order",
+            "final_line": 130,
+            "severity": "medium",
+            "type": "Long Method",
             "description": "Método com 85 linhas fazendo múltiplas operações",
-            "evidence": "def process_order(self, order):\n    # 85 linhas de código...",
+            "evidence": "def process_order(self, order):\\n    # 85 linhas de código...",
             "violated_principle": "Single Responsibility Principle",
+            "impact": "Dificulta manutenção, testes e entendimento do código",
             "recommendation": "Extrair validação, cálculo e persistência em métodos separados",
-            "suggested_refactoring": "Criar métodos: validate_order(), calculate_totals(), persist_order()"
+            "example": "Criar métodos: validate_order(), calculate_totals(), persist_order()",
+            "reference": "Clean Code - Robert Martin"
         }}
-    ],
-    "good_practices": [
-        "Nomenclatura clara e consistente",
-        "Uso apropriado de type hints",
-        "Funções pequenas e focadas"
-    ],
-    "refactoring_opportunities": [
-        {{
-            "type": "Extract Method",
-            "file": "src/utils/helpers.py",
-            "line": 120,
-            "description": "Bloco de código que poderia ser extraído para método reutilizável"
-        }}
-    ],
-    "overall_assessment": "Resumo da qualidade geral do código no PR"
+    ]
 }}
 ```
+
+**IMPORTANTE:**
+- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- Inclua `violated_principle` quando aplicável (SOLID, DRY, KISS)
+- Foque em problemas que realmente afetam manutenibilidade
 
 ## ⚠️ REGRAS IMPORTANTES:
 

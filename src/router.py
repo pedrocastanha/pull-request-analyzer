@@ -36,27 +36,30 @@ async def analyze_pr(request: AnalyzePRRequest):
             }
 
         reviewer_analysis = result.get("reviewer_analysis", {})
+        comments = reviewer_analysis.get("comments", [])
 
         logger.info(
             f"[API] PR #{request.pull_request_id} analysis completed successfully. "
-            f"Comments generated: {len(reviewer_analysis.get('comments', []))}"
+            f"Comments generated: {len(comments)}"
         )
 
-        return {
-            "status": "success",
-            "message": "PR analysis completed successfully",
-            "pr_id": request.pull_request_id,
-            "analysis": {
-                "pr_data": result.get("pr_data"),
-                "security_analysis": result.get("security_analysis"),
-                "performance_analysis": result.get("performance_analysis"),
-                "clean_code_analysis": result.get("clean_code_analysis"),
-                "logical_analysis": result.get("logical_analysis"),
-                "reviewer_analysis": reviewer_analysis,
-                "final_report": result.get("final_report"),
-            },
-            "error": None,
-        }
+        if comments:
+            logger.debug(f"[API] Sample comment structure: {comments[0]}")
+
+        try:
+            response = {
+                "status": "success",
+                "message": "PR analysis completed successfully",
+                "pr_id": request.pull_request_id,
+                "comments": comments,
+                "total_comments": len(comments),
+                "error": None,
+            }
+            logger.info(f"[API] Returning response with {len(comments)} comments")
+            return response
+        except Exception as e:
+            logger.error(f"[API] Error creating response: {str(e)}", exc_info=True)
+            raise
 
     except Exception as e:
         logger.error(

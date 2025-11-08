@@ -93,51 +93,35 @@ search_informations(
 
 ## 📤 FORMATO DE RESPOSTA:
 
-Retorne um JSON estruturado:
+Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
 {{
-    "logical_score": "solid" | "minor_issues" | "bugs_detected" | "critical_bugs",
-    "bugs": [
+    "issues": [
         {{
-            "type": "Division by Zero",
-            "severity": "high",
             "file": "src/utils/calculator.py",
             "line": 23,
+            "final_line": 23,
+            "severity": "high",
+            "type": "Division by Zero",
             "description": "Divisão sem verificação se denominador é zero",
             "evidence": "result = total / count",
             "scenario": "Quando count=0, causará ZeroDivisionError",
             "impact": "Crash da aplicação em runtime",
-            "recommendation": "Adicionar validação: if count == 0: return 0",
-            "suggested_fix": "result = total / count if count != 0 else 0"
+            "recommendation": "Adicionar validação antes da divisão",
+            "example": "result = total / count if count != 0 else 0",
+            "reference": null
         }}
-    ],
-    "edge_cases": [
-        {{
-            "type": "Empty List Not Handled",
-            "file": "src/processors/data.py",
-            "line": 67,
-            "description": "Acesso a lista[0] sem verificar se lista está vazia",
-            "scenario": "IndexError quando lista vazia",
-            "recommendation": "Verificar: if not lista: return None"
-        }}
-    ],
-    "logic_improvements": [
-        {{
-            "type": "Redundant Condition",
-            "file": "src/validators/input.py",
-            "line": 34,
-            "description": "Condição sempre verdadeira: if x > 0 or x >= 0",
-            "recommendation": "Simplificar para: if x >= 0"
-        }}
-    ],
-    "good_logic": [
-        "Validação adequada de inputs",
-        "Tratamento correto de casos extremos"
-    ],
-    "overall_assessment": "Resumo da solidez lógica do PR"
+    ]
 }}
 ```
+
+**IMPORTANTE:**
+- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- Inclua `scenario` descrevendo quando o bug ocorre
+- Explique o `impact` concreto (crash, dados errados, etc.)
 
 ## ⚠️ REGRAS IMPORTANTES:
 

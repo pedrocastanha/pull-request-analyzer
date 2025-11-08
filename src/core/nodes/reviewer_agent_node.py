@@ -4,6 +4,7 @@ from typing import Dict, Any
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
+from src.utils.json_parser import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
 
@@ -81,15 +82,11 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         else:
             analysis_text = str(response)
 
-        try:
-            analysis_result = json.loads(analysis_text)
-        except (json.JSONDecodeError, AttributeError, TypeError):
-            analysis_result = {"raw_analysis": str(analysis_text), "format": "text"}
+        analysis_result = parse_llm_json_response(analysis_text)
 
-        comments_count = len(analysis_result.get("comments", []))
+        comments_count = len(analysis_result.get("comments", [])) if isinstance(analysis_result.get("comments"), list) else 0
         logger.info(
-            f"[NODE: reviewer_analysis] ✓ Generated {comments_count} comments. "
-            f"Result preview: {str(analysis_result)[:500]}..."
+            f"[NODE: reviewer_analysis] ✓ Generated {comments_count} comment(s)"
         )
 
         return {"reviewer_analysis": analysis_result}

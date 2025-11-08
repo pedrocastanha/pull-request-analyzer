@@ -73,30 +73,33 @@ search_informations(
 
 ## 📤 FORMATO DE RESPOSTA:
 
-Retorne um JSON estruturado:
+Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
 {{
-    "severity": "critical" | "high" | "medium" | "low" | "none",
-    "vulnerabilities": [
+    "issues": [
         {{
-            "type": "SQL Injection",
-            "severity": "critical",
             "file": "src/api/users.py",
             "line": 45,
+            "final_line": 45,
+            "severity": "high",
+            "type": "SQL Injection",
             "description": "Query SQL usando concatenação de strings sem sanitização",
             "evidence": "query = f'SELECT * FROM users WHERE id={{user_id}}'",
+            "impact": "Permite execução de queries arbitrárias, roubo de dados",
             "recommendation": "Usar prepared statements ou ORM para evitar SQL injection",
+            "example": "user = User.query.filter_by(id=user_id).first()",
             "reference": "OWASP A03:2021 - Injection"
         }}
-    ],
-    "secure_practices": [
-        "Uso correto de bcrypt para hashing de senhas",
-        "Validação de input implementada corretamente"
-    ],
-    "overall_assessment": "Análise resumida da segurança geral do PR"
+    ]
 }}
 ```
+
+**IMPORTANTE:**
+- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- Seja específico: indique a linha EXATA do problema
 
 ## ⚠️ REGRAS IMPORTANTES:
 

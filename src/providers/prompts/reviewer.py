@@ -37,93 +37,72 @@ Você DEVE retornar um JSON estruturado neste formato EXATO:
         {{
             "file": "src/api/users.py",
             "line": 45,
-            "severity": "critical" | "high" | "medium" | "low" | "info",
-            "category": "security" | "performance" | "clean_code" | "logical" | "general",
-            "title": "SQL Injection Vulnerability",
-            "message": "Query SQL usando concatenação de strings sem sanitização. Isso abre uma vulnerabilidade crítica de SQL injection.",
-            "suggestion": "Usar prepared statements ou ORM:\n```python\nuser = User.query.filter_by(id=user_id).first()\n```",
-            "reference": "OWASP A03:2021 - Injection"
-        }},
-        {{
-            "file": "src/utils/calculator.py",
-            "line": 23,
+            "final_line": 45,
             "severity": "high",
-            "category": "logical",
-            "title": "Division by Zero Not Handled",
-            "message": "Divisão sem verificação se denominador é zero. Causará crash quando count=0.",
-            "suggestion": "Adicionar validação:\n```python\nresult = total / count if count != 0 else 0\n```",
-            "reference": null
+            "message": "**O que está errado:** Query SQL usando concatenação de strings.\\n\\n**Por que é um problema:** Permite SQL injection - atacante pode executar queries arbitrárias.\\n\\n**Como corrigir:** Use ORM:\\n```python\\nuser = User.query.filter_by(id=user_id).first()\\n```\\n\\n**Aprenda mais:** Pesquise 'OWASP SQL Injection prevention'"
         }},
         {{
             "file": "src/services/order.py",
             "line": 78,
+            "final_line": 79,
             "severity": "medium",
-            "category": "performance",
-            "title": "N+1 Query Problem",
-            "message": "Loop executando query para cada item. Com 100 items, serão 100+ queries ao banco.",
-            "suggestion": "Usar eager loading:\n```python\nproducts = Product.query.filter(Product.id.in_(ids)).all()\n```",
-            "reference": null
+            "message": "**O que está errado:** Loop com query para cada item (N+1).\\n\\n**Por que é um problema:** 100 items = 100 queries = lentidão de 5+ segundos.\\n\\n**Como corrigir:** Use eager loading:\\n```python\\nids = [item.product_id for item in items]\\nproducts = Product.query.filter(Product.id.in_(ids)).all()\\n```\\n\\n**Aprenda mais:** Pesquise 'N+1 query problem'"
         }}
-    ],
-    "summary": {{
-        "total_issues": 15,
-        "by_severity": {{
-            "critical": 1,
-            "high": 3,
-            "medium": 7,
-            "low": 4
-        }},
-        "by_category": {{
-            "security": 3,
-            "performance": 5,
-            "clean_code": 4,
-            "logical": 3
-        }},
-        "recommendation": "APPROVE" | "APPROVE_WITH_SUGGESTIONS" | "REQUEST_CHANGES" | "REJECT"
-    }},
-    "overall_assessment": "Texto livre resumindo a análise geral do PR e principais pontos de atenção"
+    ]
 }}
 ```
+
+**ATENÇÃO:** Mantenha as mensagens CONCISAS. Evite textos muito longos que possam causar erros de parsing.
+
+**FORMATO DO CAMPO `message`:**
+O campo `message` deve ser UMA string completa contendo TODAS as informações, formatada assim:
+
+1. **O que está errado:** Descrição clara e simples do problema
+2. **Por que é um problema:** Impacto concreto (crash? lentidão? dados errados? segurança?)
+3. **Como corrigir:** Solução prática com código de exemplo
+4. **Aprenda mais:** Termos de busca ou referências para o desenvolvedor pesquisar
+
+**IMPORTANTE - FORMATO JSON:**
+- Você DEVE retornar APENAS JSON válido, sem texto antes ou depois
+- Se NÃO houver nenhum problema nas análises, retorne: `{{"comments": []}}`
+- APENAS retorne comentários para coisas que PRECISAM de atenção
+- Se os agents não encontraram problemas, retorne lista vazia
+- `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- `severity` deve ser: "high", "medium", ou "low"
+- NÃO inclua campos extras como "title", "suggestion", "category", "reference"
+
+**CUIDADOS COM JSON:**
+- SEMPRE use aspas duplas (") para strings, NUNCA aspas simples (')
+- Escape quebras de linha dentro de strings usando \\n
+- Escape aspas dentro de strings usando \\"
+- Não deixe vírgulas sobrando no último item de arrays ou objetos
+- Garanta que todos os colchetes e chaves estejam balanceados
 
 ## 📋 REGRAS PARA GERAÇÃO DE COMENTÁRIOS:
 
 ### 1. **Separação por Arquivo e Linha**
 - Cada comentário DEVE ter `file` e `line` específicos
-- Agrupe issues do mesmo arquivo
-- Ordene por severidade (critical → low)
+- Se o problema abrange múltiplas linhas, use `final_line`
+- Ordene por severidade (high → medium → low)
 
 ### 2. **Severidade Clara**
-- **critical**: Vulnerabilidade exploitável, crash garantido, dados corrompidos
-- **high**: Bugs graves, problemas sérios de performance, falhas de segurança
-- **medium**: Code smells significativos, edge cases não tratados
+- **high**: Bugs que causam crash, vulnerabilidades sérias, problemas graves de performance
+- **medium**: Code smells significativos, edge cases não tratados, otimizações importantes
 - **low**: Melhorias, sugestões, otimizações menores
-- **info**: Informações, boas práticas encontradas
 
-### 3. **Categoria Clara**
-Use as categorias dos agents:
-- `security` - Do Security Agent
-- `performance` - Do Performance Agent
-- `clean_code` - Do CleanCoder Agent
-- `logical` - Do Logical Agent
-- `general` - Observações gerais suas
+### 3. **Consolidação Inteligente**
+- Se múltiplos agents apontam o MESMO problema no MESMO local, consolide em 1 comentário
+- Combine as informações dos agents em uma mensagem coerente
+- Não crie comentários duplicados
 
-### 4. **Mensagem Clara e Acionável**
-- **Title**: Curto e descritivo (ex: "SQL Injection Vulnerability")
-- **Message**: Explique O QUE é o problema e QUAL o impacto
-- **Suggestion**: Dê código corrigido ou ação concreta
-- **Reference**: Link ou referência (OWASP, docs, etc.) quando aplicável
+### 4. **Mensagem Completa e Didática**
+Cada `message` deve ser autocontida e incluir:
+- **O que está errado**: Descrição clara do problema
+- **Por que é um problema**: Impacto real (crash, lentidão, segurança, manutenção)
+- **Como corrigir**: Solução prática com exemplo de código
+- **Aprenda mais**: Termos de busca ou referências para estudo
 
-### 5. **Consolidação Inteligente**
-- Se múltiplos agents apontam o MESMO problema, consolide em 1 comentário
-- Mencione que múltiplos agents identificaram: "Identificado por Security e Logical agents"
-
-## 💡 RECOMENDAÇÃO FINAL:
-
-Baseado na severidade dos issues:
-- **REJECT**: 1+ critical issues
-- **REQUEST_CHANGES**: 3+ high issues ou mix de high+medium significativo
-- **APPROVE_WITH_SUGGESTIONS**: Apenas medium/low issues
-- **APPROVE**: Nenhum issue ou apenas low/info
+Use markdown para formatação (negrito, código, quebras de linha)
 
 ## 🎯 SUA RESPONSABILIDADE:
 
