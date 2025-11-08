@@ -1,7 +1,6 @@
 import logging
 from pinecone import Pinecone
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
 from src.settings import Settings
 
 logger = logging.getLogger(__name__)

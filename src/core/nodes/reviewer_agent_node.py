@@ -73,14 +73,18 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
         response = await agent.ainvoke({"context": context})
 
-        analysis_text = (
-            response.content if hasattr(response, "content") else str(response)
-        )
+        if hasattr(response, "content"):
+            if isinstance(response.content, list):
+                analysis_text = str(response.content)
+            else:
+                analysis_text = response.content
+        else:
+            analysis_text = str(response)
 
         try:
             analysis_result = json.loads(analysis_text)
-        except (json.JSONDecodeError, AttributeError):
-            analysis_result = {"raw_analysis": analysis_text, "format": "text"}
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            analysis_result = {"raw_analysis": str(analysis_text), "format": "text"}
 
         comments_count = len(analysis_result.get("comments", []))
         logger.info(

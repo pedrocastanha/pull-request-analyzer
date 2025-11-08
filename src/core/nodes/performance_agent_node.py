@@ -54,16 +54,20 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         logger.info(f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars")
         response = await agent.ainvoke({"context": context})
 
-        analysis_text = (
-            response.content if hasattr(response, "content") else str(response)
-        )
+        if hasattr(response, "content"):
+            if isinstance(response.content, list):
+                analysis_text = str(response.content)
+            else:
+                analysis_text = response.content
+        else:
+            analysis_text = str(response)
 
-        logger.info(f"[NODE: performance_analysis] Received response, length: {len(analysis_text)} chars")
+        logger.info(f"[NODE: performance_analysis] Received response, length: {len(str(analysis_text))} chars")
 
         try:
             analysis_result = json.loads(analysis_text)
-        except (json.JSONDecodeError, AttributeError):
-            analysis_result = {"raw_analysis": analysis_text, "format": "text"}
+        except (json.JSONDecodeError, AttributeError, TypeError):
+            analysis_result = {"raw_analysis": str(analysis_text), "format": "text"}
 
         logger.info(
             f"[NODE: performance_analysis] ✓ Analysis complete. "

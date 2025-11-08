@@ -10,3 +10,4 @@ langgraph
 python-dotenv
 black
 pinecone
+google-genai
