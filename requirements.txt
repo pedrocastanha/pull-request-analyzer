@@ -11,3 +11,6 @@ python-dotenv
 black
 pinecone
 google-genai
+docx
+fitz
+python-multipart

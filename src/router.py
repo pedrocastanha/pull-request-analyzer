@@ -1,11 +1,13 @@
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from pydantic import BaseModel, Field
 
 from src.core.graph import graph
 from src.core.state import create_initial_state
 from src.schemas import AnalyzePRResponse, AnalyzePRRequest
+from src.utils.document_processor import DocumentProcessor
+from src.utils.pinecone_manager import PineconeManager
 
 logger = logging.getLogger(__name__)
 
@@ -68,4 +70,41 @@ async def analyze_pr(request: AnalyzePRRequest):
         raise HTTPException(
             status_code=500,
             detail=f"Internal server error during PR analysis: {str(e)}",
+        )
+
+
+@router.post("/add-document")
+async def add_document_vector_store(
+    file: UploadFile = File(...), namespace: str = Form(...)
+):
+    logger.info(
+        f"[API] Received request to add document '{file.filename}' to namespace: {namespace}"
+    )
+    try:
+        if not namespace:
+            raise HTTPException(status_code=400, detail="Namespace is required.")
+
+        document_processor = DocumentProcessor()
+        pinecone_manager = PineconeManager(namespace)
+
+        logger.info(f"[API] Extracting text from document: {file.filename}")
+        extracted_text = await document_processor.extract_text_from_file(file)
+
+        logger.info(f"[API] Adding document to namespace: {namespace}")
+        pinecone_manager.add_documents([extracted_text])
+
+        logger.info(f"[API] Successfully processed document '{file.filename}'")
+        return {
+            "status": "success",
+            "message": f"Successfully processed document '{file.filename}' for namespace '{namespace}'"
+        }
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.error(f"[API] Validation error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[API] Unexpected error in add-document route: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500, detail="An internal server error occurred."
         )
