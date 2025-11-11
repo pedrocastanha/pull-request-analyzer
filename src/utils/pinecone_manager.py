@@ -38,8 +38,8 @@ class PineconeManager:
 
         logger.info("Setting up text splitter")
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=500,
-            chunk_overlap=75,
+            chunk_size=700,
+            chunk_overlap=100,
         )
 
         self._create_index_if_not_exists()
