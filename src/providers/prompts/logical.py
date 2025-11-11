@@ -18,7 +18,7 @@ Analisar Pull Requests identificando **erros lógicos**, **bugs potenciais**, **
 Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em lógica e debugging:
 
 **Como usar:**
-```python
+```
 search_informations(
     query="descrição do que você precisa buscar",
     namespace="logical"  # IMPORTANTE: sempre use namespace="logical"
@@ -40,7 +40,7 @@ search_informations(
 - Ao analisar fluxos assíncronos ou concorrentes
 
 **Exemplo:**
-```python
+```
 # Se encontrar divisão sem verificação de zero
 search_informations(
     query="tratamento de divisão por zero e edge cases",

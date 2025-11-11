@@ -18,7 +18,7 @@ Analisar Pull Requests identificando **gargalos de performance**, **operações 
 Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em performance:
 
 **Como usar:**
-```python
+```
 search_informations(
     query="descrição do que você precisa buscar",
     namespace="performance"  # IMPORTANTE: sempre use namespace="performance"
@@ -40,7 +40,7 @@ search_informations(
 - Ao analisar queries ou operações de I/O
 
 **Exemplo:**
-```python
+```
 # Se encontrar loop aninhado com queries
 search_informations(
     query="problema N+1 em queries e eager loading",

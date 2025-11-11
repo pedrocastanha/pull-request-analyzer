@@ -18,7 +18,7 @@ Analisar Pull Requests identificando **vulnerabilidades de segurança**, **expos
 Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em segurança:
 
 **Como usar:**
-```python
+```
 search_informations(
     query="descrição do que você precisa buscar",
     namespace="security"  # IMPORTANTE: sempre use namespace="security"
@@ -38,7 +38,7 @@ search_informations(
 - Para validar se uma prática é segura ou não
 
 **Exemplo:**
-```python
+```
 # Se encontrar uso de eval() no código
 search_informations(
     query="vulnerabilidades com eval e alternativas seguras",

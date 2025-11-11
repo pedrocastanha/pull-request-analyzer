@@ -18,7 +18,7 @@ Analisar Pull Requests identificando **code smells**, **violações de princípi
 Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em clean code:
 
 **Como usar:**
-```python
+```
 search_informations(
     query="descrição do que você precisa buscar",
     namespace="clean_code"  # IMPORTANTE: sempre use namespace="clean_code"
@@ -40,7 +40,7 @@ search_informations(
 - Ao analisar complexidade ciclomática alta
 
 **Exemplo:**
-```python
+```
 # Se encontrar classe com muitas responsabilidades
 search_informations(
     query="Single Responsibility Principle e refactoring God Object",

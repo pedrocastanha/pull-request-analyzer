@@ -43,13 +43,24 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
+        callback = AgentManager.get_callback(verbose=True)
+
         agent = AgentManager.get_agents(
             tools=[search_informations], agent_name="Performance"
         )
-        logger.info(f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars")
-        response = await agent.ainvoke({"context": context})
 
-        if hasattr(response, "content"):
+        logger.info(f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars")
+
+        response = await agent.ainvoke(
+            {"context": context},
+            config={"callbacks": [callback]}
+        )
+
+        callback.print_summary()
+
+        if isinstance(response, dict) and "output" in response:
+            analysis_text = response["output"]
+        elif hasattr(response, "content"):
             if isinstance(response.content, list):
                 analysis_text = str(response.content)
             else:

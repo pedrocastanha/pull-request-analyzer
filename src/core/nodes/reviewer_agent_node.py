@@ -71,10 +71,20 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
-        response = await agent.ainvoke({"context": context})
+        callback = AgentManager.get_callback(verbose=True)
 
-        if hasattr(response, "content"):
+        agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
+
+        response = await agent.ainvoke(
+            {"context": context},
+            config={"callbacks": [callback]}
+        )
+
+        callback.print_summary()
+
+        if isinstance(response, dict) and "output" in response:
+            analysis_text = response["output"]
+        elif hasattr(response, "content"):
             if isinstance(response.content, list):
                 analysis_text = str(response.content)
             else:
