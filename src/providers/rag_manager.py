@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Dict, Optional
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 
@@ -16,15 +16,15 @@ class RAGManager:
     def __init__(self):
         self.vectorstore: Optional[FAISS] = None
 
-        google_api_key = Settings.GOOGLE_GENAI_API_KEY
+        openai_api_key = Settings.OPENAI_API_KEY
 
-        if not google_api_key:
-            logger.warning("[RAG] GOOGLE_API_KEY not found in .env")
+        if not openai_api_key:
+            logger.warning("[RAG] OPENAI_API_KEY not found in .env")
 
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001", google_api_key=google_api_key
+        self.embeddings = OpenAIEmbeddings(
+            model="text-embedding-3-small", openai_api_key=openai_api_key
         )
-        logger.info("[RAG] RAG Manager initialized with Google Embeddings")
+        logger.info("[RAG] RAG Manager initialized with OpenAI Embeddings")
 
     def create_from_pr_data(self, pr_data: Dict, chunk_size: int = 800) -> None:
         logger.info(f"[RAG] Creating vectorstore from PR #{pr_data.get('pr_id')}")
