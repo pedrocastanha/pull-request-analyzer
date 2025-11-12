@@ -17,7 +17,39 @@ Analisar Pull Requests identificando **code smells**, **violações de princípi
 
 ## 🔧 FERRAMENTAS DISPONÍVEIS:
 
-Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em clean code:
+### 🎯 TOOL PRINCIPAL: search_pr_code (USE SEMPRE!)
+
+**A MAIS IMPORTANTE!** Esta tool busca diretamente no código do PR que você está analisando:
+
+```
+search_pr_code(
+    query="descrição do que procura no código",
+    top_k=5,
+    filter_extension="py"  # opcional
+)
+```
+
+**COMO USAR NA PRÁTICA:**
+1. **PRIMEIRO**: Faça queries para encontrar code smells:
+   - `search_pr_code("métodos longos funções grandes")`
+   - `search_pr_code("código duplicado repetido")`
+   - `search_pr_code("classes com muitas responsabilidades")`
+   - `search_pr_code("nomes variáveis temp data aux")`
+   - `search_pr_code("complexidade ciclomática ifs aninhados")`
+
+2. **ANALISE** os trechos retornados
+
+3. **SE NECESSÁRIO**: Use search_informations para buscar refactorings em livros
+
+**IMPORTANTE:**
+- Faça MÚLTIPLAS queries específicas
+- NÃO tente analisar sem buscar o código primeiro
+
+---
+
+### 📚 TOOL SECUNDÁRIA: search_informations
+
+Para buscar informações de livros e documentação especializada em clean code:
 
 **Como usar:**
 ```

@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from src.core.state import PRAnalysisState
 from src.providers.agents import AgentManager
-from src.providers.tools.shared_tools import search_informations
+from src.providers.tools.shared_tools import search_informations, search_pr_code
 from src.utils.json_parser import parse_llm_json_response
 
 from src.providers.prompts.security import Security
@@ -35,14 +35,17 @@ async def security_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         f"Total de arquivos modificados: {total_files} "
         f"(+{pr_data['total_additions']} -{pr_data['total_deletions']} linhas)\n"
     )
+    context_parts.append("\n## Arquivos Modificados:\n")
 
     for file_change in files:
-        context_parts.append(f"\n## Arquivo: {file_change['path']}")
-        context_parts.append(f"Tipo de mudança: {file_change['change_type']}")
         context_parts.append(
-            f"Linhas: +{file_change['additions']} -{file_change['deletions']}"
+            f"  • {file_change['path']} ({file_change['change_type']}) "
+            f"+{file_change['additions']} -{file_change['deletions']}"
         )
-        context_parts.append(f"\n```diff\n{file_change['diff']}\n```")
+
+    context_parts.append(
+        "\n💡 Use a tool `search_pr_code()` para buscar trechos específicos do código!"
+    )
 
     context = "\n".join(context_parts)
 
@@ -50,7 +53,7 @@ async def security_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         callback = AgentManager.get_callback(verbose=True)
 
         agent = AgentManager.get_agents(
-            tools=[search_informations], agent_name="Security"
+            tools=[search_informations, search_pr_code], agent_name="Security"
         )
 
         response = await agent.ainvoke(

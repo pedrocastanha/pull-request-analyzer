@@ -3,7 +3,7 @@ from typing import Dict, Any
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
-from src.providers.tools.shared_tools import search_informations
+from src.providers.tools.shared_tools import search_informations, search_pr_code
 from src.utils.json_parser import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         callback = AgentManager.get_callback(verbose=True)
 
         agent = AgentManager.get_agents(
-            tools=[search_informations], agent_name="Logical"
+            tools=[search_informations, search_pr_code], agent_name="Logical"
         )
 
         response = await agent.ainvoke(

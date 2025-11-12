@@ -17,7 +17,39 @@ Analisar Pull Requests identificando **gargalos de performance**, **operações 
 
 ## 🔧 FERRAMENTAS DISPONÍVEIS:
 
-Você tem acesso à tool **search_informations** para buscar informações de livros e documentação especializada em performance:
+### 🎯 TOOL PRINCIPAL: search_pr_code (USE SEMPRE!)
+
+**A MAIS IMPORTANTE!** Esta tool busca diretamente no código do PR que você está analisando:
+
+```
+search_pr_code(
+    query="descrição do que procura no código",
+    top_k=5,
+    filter_extension="py"  # opcional
+)
+```
+
+**COMO USAR NA PRÁTICA:**
+1. **PRIMEIRO**: Faça queries para encontrar gargalos:
+   - `search_pr_code("loops aninhados iterações for while")`
+   - `search_pr_code("queries SQL banco de dados")`
+   - `search_pr_code("operações I/O arquivo read write")`
+   - `search_pr_code("chamadas API requests HTTP")`
+   - `search_pr_code("operações assíncronas async await")`
+
+2. **ANALISE** os trechos retornados
+
+3. **SE NECESSÁRIO**: Use search_informations para buscar técnicas de otimização
+
+**IMPORTANTE:**
+- Faça MÚLTIPLAS queries específicas
+- NÃO tente analisar sem buscar o código primeiro
+
+---
+
+### 📚 TOOL SECUNDÁRIA: search_informations
+
+Para buscar informações de livros e documentação especializada em performance:
 
 **Como usar:**
 ```

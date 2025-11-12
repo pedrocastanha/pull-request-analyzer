@@ -15,3 +15,5 @@ python-docx
 PyMuPDF
 python-multipart
 langsmith
+langchain_community
+faiss-cpu
