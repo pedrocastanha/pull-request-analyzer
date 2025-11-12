@@ -13,21 +13,18 @@ class ChainManager:
     def get_agent_executor(llm, tools, agent_name):
         base_prompt = PromptManager.get_agent_prompt(agent_name)
 
-        prompt_with_tools = ChatPromptTemplate.from_messages([
-            ("system", base_prompt.messages[0].prompt.template),
-            ("human", "{context}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ])
+        prompt_with_tools = ChatPromptTemplate.from_messages(
+            [
+                ("system", base_prompt.messages[0].prompt.template),
+                ("human", "{context}"),
+                MessagesPlaceholder(variable_name="agent_scratchpad"),
+            ]
+        )
 
         agent = create_tool_calling_agent(
-            llm=llm,
-            tools=tools,
-            prompt=prompt_with_tools
+            llm=llm, tools=tools, prompt=prompt_with_tools
         )
 
         return AgentExecutor(
-            agent=agent,
-            tools=tools,
-            verbose=False,
-            handle_parsing_errors=True
+            agent=agent, tools=tools, verbose=False, handle_parsing_errors=True
         )

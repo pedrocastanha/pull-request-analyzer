@@ -76,13 +76,17 @@ def _build_module_section(module_analysis) -> str:
     clean_code = module_analysis["clean_code_analysis"]
 
     total_issues = (
-        len(security.get("issues", [])) +
-        len(logical.get("issues", [])) +
-        len(performance.get("issues", [])) +
-        len(clean_code.get("issues", []))
+        len(security.get("issues", []))
+        + len(logical.get("issues", []))
+        + len(performance.get("issues", []))
+        + len(clean_code.get("issues", []))
     )
 
-    icon = "🔴" if len(security.get("issues", [])) > 0 else "🟡" if total_issues > 3 else "🟢"
+    icon = (
+        "🔴"
+        if len(security.get("issues", [])) > 0
+        else "🟡" if total_issues > 3 else "🟢"
+    )
 
     lines = [f"## {icon} Módulo: `{module_name}`", ""]
     lines.append(f"**Arquivos:** {len(files)}")
@@ -97,8 +101,12 @@ def _build_module_section(module_analysis) -> str:
     if security.get("issues"):
         lines.append("### 🔒 Security Issues")
         for i, issue in enumerate(security["issues"], 1):
-            lines.append(f"{i}. **{issue.get('type', 'Security Issue')}** ({issue.get('severity', 'medium')})")
-            lines.append(f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`")
+            lines.append(
+                f"{i}. **{issue.get('type', 'Security Issue')}** ({issue.get('severity', 'medium')})"
+            )
+            lines.append(
+                f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`"
+            )
             lines.append(f"   - {issue.get('description', 'No description')}")
             if issue.get("recommendation"):
                 lines.append(f"   - 💡 **Fix:** {issue['recommendation']}")
@@ -107,8 +115,12 @@ def _build_module_section(module_analysis) -> str:
     if logical.get("issues"):
         lines.append("### 🧠 Logical Issues")
         for i, issue in enumerate(logical["issues"], 1):
-            lines.append(f"{i}. **{issue.get('type', 'Logical Issue')}** ({issue.get('severity', 'medium')})")
-            lines.append(f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`")
+            lines.append(
+                f"{i}. **{issue.get('type', 'Logical Issue')}** ({issue.get('severity', 'medium')})"
+            )
+            lines.append(
+                f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`"
+            )
             lines.append(f"   - {issue.get('description', 'No description')}")
             if issue.get("recommendation"):
                 lines.append(f"   - 💡 **Fix:** {issue['recommendation']}")
@@ -117,8 +129,12 @@ def _build_module_section(module_analysis) -> str:
     if performance.get("issues"):
         lines.append("### ⚡ Performance Issues")
         for i, issue in enumerate(performance["issues"], 1):
-            lines.append(f"{i}. **{issue.get('type', 'Performance Issue')}** ({issue.get('severity', 'medium')})")
-            lines.append(f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`")
+            lines.append(
+                f"{i}. **{issue.get('type', 'Performance Issue')}** ({issue.get('severity', 'medium')})"
+            )
+            lines.append(
+                f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`"
+            )
             lines.append(f"   - {issue.get('description', 'No description')}")
             if issue.get("recommendation"):
                 lines.append(f"   - 💡 **Fix:** {issue['recommendation']}")
@@ -127,8 +143,12 @@ def _build_module_section(module_analysis) -> str:
     if clean_code.get("issues"):
         lines.append("### 🎨 Clean Code Issues")
         for i, issue in enumerate(clean_code["issues"], 1):
-            lines.append(f"{i}. **{issue.get('type', 'Clean Code Issue')}** ({issue.get('severity', 'medium')})")
-            lines.append(f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`")
+            lines.append(
+                f"{i}. **{issue.get('type', 'Clean Code Issue')}** ({issue.get('severity', 'medium')})"
+            )
+            lines.append(
+                f"   - File: `{issue.get('file', 'N/A')}:{issue.get('line', 'N/A')}`"
+            )
             lines.append(f"   - {issue.get('description', 'No description')}")
             if issue.get("recommendation"):
                 lines.append(f"   - 💡 **Fix:** {issue['recommendation']}")
@@ -150,15 +170,17 @@ def _build_recommendations(state: HierarchicalPRAnalysisState) -> str:
     )
 
     total_issues = sum(
-        len(m["security_analysis"].get("issues", [])) +
-        len(m["logical_analysis"].get("issues", [])) +
-        len(m["performance_analysis"].get("issues", [])) +
-        len(m["clean_code_analysis"].get("issues", []))
+        len(m["security_analysis"].get("issues", []))
+        + len(m["logical_analysis"].get("issues", []))
+        + len(m["performance_analysis"].get("issues", []))
+        + len(m["clean_code_analysis"].get("issues", []))
         for m in state.get("module_analyses", [])
     )
 
     if total_security > 0:
-        lines.append("🚨 **PRIORIDADE ALTA:** Corrija vulnerabilidades de segurança antes do merge!")
+        lines.append(
+            "🚨 **PRIORIDADE ALTA:** Corrija vulnerabilidades de segurança antes do merge!"
+        )
         lines.append("")
 
     if total_issues > 15:

@@ -15,7 +15,9 @@ headers = {
 class AzureManager:
     @staticmethod
     def get_pr_consolidated_changes(pr_id: int) -> Optional[Dict]:
-        logger.info(f"Fetching consolidated changes for PR #{pr_id} (branch comparison)")
+        logger.info(
+            f"Fetching consolidated changes for PR #{pr_id} (branch comparison)"
+        )
         try:
             pr_url = f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/pullrequests/{pr_id}?api-version={Settings.AZURE_API_VERSION}"
 
@@ -34,9 +36,7 @@ class AzureManager:
             source_branch = source_ref.replace("refs/heads/", "")
             target_branch = target_ref.replace("refs/heads/", "")
 
-            logger.info(
-                f"Comparing branches: {source_branch} → {target_branch}"
-            )
+            logger.info(f"Comparing branches: {source_branch} → {target_branch}")
 
             diff_url = (
                 f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/diffs/commits?"
@@ -73,8 +73,12 @@ class AzureManager:
 
                 logger.debug(f"Processing file: {file_path}")
 
-                old_content = AzureManager.get_old_file_content(common_commit, file_path)
-                new_content = AzureManager.get_target_file_content(target_commit, file_path)
+                old_content = AzureManager.get_old_file_content(
+                    common_commit, file_path
+                )
+                new_content = AzureManager.get_target_file_content(
+                    target_commit, file_path
+                )
 
                 diff_result = AzureManager.calculate_diff(
                     old_content, new_content, file_path
@@ -96,7 +100,7 @@ class AzureManager:
                 "total_files": total_files,
                 "total_additions": total_additions,
                 "total_deletions": total_deletions,
-                "files": processed_files
+                "files": processed_files,
             }
 
             logger.info(
@@ -115,7 +119,9 @@ class AzureManager:
             logger.error(f"Request error fetching PR #{pr_id}: {str(e)}")
             return None
         except Exception as e:
-            logger.error(f"Unexpected error fetching PR #{pr_id}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error fetching PR #{pr_id}: {str(e)}", exc_info=True
+            )
             return None
 
     @staticmethod

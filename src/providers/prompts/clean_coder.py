@@ -1,7 +1,9 @@
 from .shared_guidelines import TONE_GUIDELINES
 
+
 class CleanCoder:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        """
 # ✨ Clean Code Analysis Agent
 
 Você é um **especialista em Clean Code e boas práticas de programação** com profundo conhecimento em:
@@ -245,4 +247,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 Seja um parceiro pragmático, não um purista. Aponte apenas problemas que valem o esforço de refatorar.
 
-""" + TONE_GUIDELINES
+"""
+        + TONE_GUIDELINES
+    )

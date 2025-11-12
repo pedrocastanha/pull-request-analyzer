@@ -96,7 +96,7 @@ async def add_document_vector_store(
         logger.info(f"[API] Successfully processed document '{file.filename}'")
         return {
             "status": "success",
-            "message": f"Successfully processed document '{file.filename}' for namespace '{namespace}'"
+            "message": f"Successfully processed document '{file.filename}' for namespace '{namespace}'",
         }
     except HTTPException:
         raise
@@ -104,7 +104,9 @@ async def add_document_vector_store(
         logger.error(f"[API] Validation error: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"[API] Unexpected error in add-document route: {e}", exc_info=True)
+        logger.error(
+            f"[API] Unexpected error in add-document route: {e}", exc_info=True
+        )
         raise HTTPException(
             status_code=500, detail="An internal server error occurred."
         )

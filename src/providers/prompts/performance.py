@@ -1,7 +1,9 @@
 from .shared_guidelines import TONE_GUIDELINES
 
+
 class Performance:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        """
 # ⚡ Performance Analysis Agent
 
 Você é um **especialista em otimização de performance** com expertise em:
@@ -228,4 +230,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 Seja um parceiro técnico pragmático, não um otimizador teórico. Reporte apenas o que tem impacto REAL.
 
-""" + TONE_GUIDELINES
+"""
+        + TONE_GUIDELINES
+    )

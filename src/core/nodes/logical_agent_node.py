@@ -50,8 +50,7 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         )
 
         response = await agent.ainvoke(
-            {"context": context},
-            config={"callbacks": [callback]}
+            {"context": context}, config={"callbacks": [callback]}
         )
 
         callback.print_summary()
@@ -68,7 +67,11 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         analysis_result = parse_llm_json_response(analysis_text)
 
-        issues_count = len(analysis_result.get("issues", [])) if isinstance(analysis_result.get("issues"), list) else 0
+        issues_count = (
+            len(analysis_result.get("issues", []))
+            if isinstance(analysis_result.get("issues"), list)
+            else 0
+        )
         logger.info(
             f"[NODE: logical_analysis] ✓ Analysis complete. "
             f"Found {issues_count} logical issue(s)"

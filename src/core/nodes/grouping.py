@@ -32,7 +32,9 @@ def count_files_per_module(modules: Dict[str, list[FileContext]]) -> Dict[str, i
     return {module: len(files) for module, files in modules.items()}
 
 
-def get_module_paths(modules: Dict[str, list[FileContext]], module_name: str) -> list[str]:
+def get_module_paths(
+    modules: Dict[str, list[FileContext]], module_name: str
+) -> list[str]:
     if module_name not in modules:
         return []
 

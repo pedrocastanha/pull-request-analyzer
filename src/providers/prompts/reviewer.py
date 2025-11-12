@@ -1,7 +1,9 @@
 from .shared_guidelines import TONE_GUIDELINES
 
+
 class Reviewer:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        """
 # 👨‍💼 PR Reviewer Agent - Consolidador Final
 
 Você é o **Reviewer Principal** do Pull Request, responsável por:
@@ -151,7 +153,9 @@ Você é a **última linha de defesa** antes do merge. Seus comentários serão 
 
 Lembre-se: Você está **agregando** análises, não fazendo análise do zero. Confie nos agents especialistas, mas FILTRE com critério!
 
-""" + TONE_GUIDELINES + """
+"""
+        + TONE_GUIDELINES
+        + """
 
 ## 📝 APLICAÇÃO DAS DIRETRIZES DE TOM:
 
@@ -169,3 +173,4 @@ Ao consolidar os comentários dos agents, você DEVE aplicar as diretrizes de to
    - Mesmo formato JSON (file, line, severity, message)
    - Apenas o conteúdo do campo `message` muda de tom
 """
+    )

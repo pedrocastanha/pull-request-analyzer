@@ -37,8 +37,7 @@ class PineconeManager:
 
         logger.info("Setting up OpenAI embeddings")
         self.embeddings = OpenAIEmbeddings(
-            model="text-embedding-3-small",
-            openai_api_key=openai_api_key
+            model="text-embedding-3-small", openai_api_key=openai_api_key
         )
 
         logger.info("Setting up text splitter")
@@ -106,9 +105,7 @@ class PineconeManager:
                 )
             except Exception as e:
                 logger.error(f"Error processing batch {i // batch_size + 1}: {e}")
-                raise Exception(
-                    f"Error processing batch {i // batch_size + 1}: {e}"
-                )
+                raise Exception(f"Error processing batch {i // batch_size + 1}: {e}")
 
         if vectors_to_upsert:
             try:
@@ -143,4 +140,3 @@ class PineconeManager:
         except Exception as e:
             logger.error(f"Error during namespace lookup '{self.namespace}': {e}")
             raise Exception(f"Error searching in namespace '{self.namespace}': {e}")
-

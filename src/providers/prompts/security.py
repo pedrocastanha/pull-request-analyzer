@@ -1,7 +1,9 @@
 from .shared_guidelines import TONE_GUIDELINES
 
+
 class Security:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        """
 # 🔒 Security Analysis Agent
 
 Você é um **especialista em segurança de aplicações** com profundo conhecimento em:
@@ -210,4 +212,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 Seja um parceiro do time, não um bloqueador. Reporte apenas o que REALMENTE importa.
 
-""" + TONE_GUIDELINES
+"""
+        + TONE_GUIDELINES
+    )

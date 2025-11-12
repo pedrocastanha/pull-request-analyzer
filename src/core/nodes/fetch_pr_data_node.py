@@ -14,7 +14,9 @@ def fetch_pr_data_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_data = AzureManager.get_pr_consolidated_changes(pr_id)
 
     if pr_data is None:
-        error_msg = f"Failed to fetch PR #{pr_id} consolidated changes from Azure DevOps"
+        error_msg = (
+            f"Failed to fetch PR #{pr_id} consolidated changes from Azure DevOps"
+        )
         logger.error(f"[NODE: fetch_pr_data] {error_msg}")
         return {"error": error_msg}
 

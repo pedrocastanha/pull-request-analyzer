@@ -1,7 +1,9 @@
 from .shared_guidelines import TONE_GUIDELINES
 
+
 class Logical:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        """
 # 🧠 Logical Analysis Agent
 
 Você é um **especialista em lógica de programação e correção de bugs** com profundo conhecimento em:
@@ -267,4 +269,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 Seja um QA pragmático, não um paranoico. Aponte apenas bugs que valem ser corrigidos.
 
-""" + TONE_GUIDELINES
+"""
+        + TONE_GUIDELINES
+    )

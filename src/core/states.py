@@ -1,5 +1,6 @@
 from typing import TypedDict, List, Dict, Any
 
+
 class FileContext(TypedDict):
     path: str
     diff: str

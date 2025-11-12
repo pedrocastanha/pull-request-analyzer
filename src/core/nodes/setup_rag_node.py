@@ -21,7 +21,9 @@ def setup_rag_node(state: PRAnalysisState) -> Dict[str, Any]:
     try:
         rag_manager = RAGManager()
 
-        logger.info(f"[NODE: setup_rag] Indexing {pr_data.get('total_files', 0)} files...")
+        logger.info(
+            f"[NODE: setup_rag] Indexing {pr_data.get('total_files', 0)} files..."
+        )
 
         rag_manager.create_from_pr_data(pr_data, chunk_size=800)
 
@@ -31,14 +33,8 @@ def setup_rag_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         logger.info("[NODE: setup_rag] ✅ RAG injected into tools, ready for agents")
 
-        return {
-            "rag_created": True,
-            "_rag_manager": rag_manager
-        }
+        return {"rag_created": True, "_rag_manager": rag_manager}
 
     except Exception as e:
         logger.error(f"[NODE: setup_rag] ❌ Error creating RAG: {e}", exc_info=True)
-        return {
-            "error": f"Failed to create RAG: {str(e)}",
-            "rag_created": False
-        }
+        return {"error": f"Failed to create RAG: {str(e)}", "rag_created": False}

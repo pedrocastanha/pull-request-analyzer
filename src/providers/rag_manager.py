@@ -22,8 +22,7 @@ class RAGManager:
             logger.warning("[RAG] GOOGLE_API_KEY not found in .env")
 
         self.embeddings = GoogleGenerativeAIEmbeddings(
-            model="models/embedding-001",
-            google_api_key=google_api_key
+            model="models/embedding-001", google_api_key=google_api_key
         )
         logger.info("[RAG] RAG Manager initialized with Google Embeddings")
 
@@ -53,23 +52,22 @@ class RAGManager:
                     "change_type": file_info.get("change_type", "unknown"),
                     "additions": file_info.get("additions", 0),
                     "deletions": file_info.get("deletions", 0),
-                    "extension": file_path.split(".")[-1] if "." in file_path else "unknown"
-                }
+                    "extension": (
+                        file_path.split(".")[-1] if "." in file_path else "unknown"
+                    ),
+                },
             )
             documents.append(doc)
 
-        logger.info(f"[RAG] Prepared {len(documents)} documents from {len(files)} files")
+        logger.info(
+            f"[RAG] Prepared {len(documents)} documents from {len(files)} files"
+        )
 
         splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=120,
-            separators=[
-                "\n@@",
-                "\n\n",
-                "\n",
-                " "
-            ],
-            length_function=len
+            separators=["\n@@", "\n\n", "\n", " "],
+            length_function=len,
         )
 
         chunks = splitter.split_documents(documents)
@@ -84,8 +82,7 @@ class RAGManager:
 
         try:
             self.vectorstore = FAISS.from_documents(
-                documents=chunks,
-                embedding=self.embeddings
+                documents=chunks, embedding=self.embeddings
             )
 
             logger.info(f"[RAG] ✅ Vectorstore created with {len(chunks)} chunks")
@@ -94,32 +91,38 @@ class RAGManager:
             logger.error(f"[RAG] ❌ Error creating vectorstore: {e}")
             raise
 
-    def search(self, query: str, k: int = 5, filter_extension: Optional[str] = None) -> str:
+    def search(
+        self, query: str, k: int = 5, filter_extension: Optional[str] = None
+    ) -> str:
         if self.vectorstore is None:
-            logger.error("[RAG] Vectorstore not created. Call create_from_pr_data first!")
+            logger.error(
+                "[RAG] Vectorstore not created. Call create_from_pr_data first!"
+            )
             return "❌ RAG não foi criado. Não é possível buscar no código."
 
         logger.info(f"[RAG] Searching for: '{query}' (top {k})")
 
         try:
-            docs = self.vectorstore.similarity_search(
-                query=query,
-                k=k * 2
-            )
+            docs = self.vectorstore.similarity_search(query=query, k=k * 2)
 
             if filter_extension:
                 docs = [
-                    doc for doc in docs
+                    doc
+                    for doc in docs
                     if doc.metadata.get("extension") == filter_extension
                 ]
-                logger.info(f"[RAG] Filtered by extension '{filter_extension}': {len(docs)} results")
+                logger.info(
+                    f"[RAG] Filtered by extension '{filter_extension}': {len(docs)} results"
+                )
 
             docs = docs[:k]
 
             if not docs:
                 return f"❌ Nenhum trecho de código encontrado para: '{query}'"
 
-            result_parts = [f"🔍 Encontrados {len(docs)} trechos relevantes para: '{query}'\n"]
+            result_parts = [
+                f"🔍 Encontrados {len(docs)} trechos relevantes para: '{query}'\n"
+            ]
 
             for i, doc in enumerate(docs, 1):
                 file_path = doc.metadata.get("file", "unknown")
@@ -156,7 +159,7 @@ class RAGManager:
                 files_info[file_path] = {
                     "additions": doc.metadata.get("additions", 0),
                     "deletions": doc.metadata.get("deletions", 0),
-                    "extension": doc.metadata.get("extension", "unknown")
+                    "extension": doc.metadata.get("extension", "unknown"),
                 }
 
         summary_parts = [f"📊 PR contém {len(files_info)} arquivos modificados:\n"]

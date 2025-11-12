@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 _rag_manager = None
 
+
 def set_rag_manager(rag_manager):
     global _rag_manager
     _rag_manager = rag_manager
@@ -16,7 +17,9 @@ def set_rag_manager(rag_manager):
 
 
 @tool
-def search_pr_code(query: str, top_k: int = 5, filter_extension: Optional[str] = None) -> str:
+def search_pr_code(
+    query: str, top_k: int = 5, filter_extension: Optional[str] = None
+) -> str:
     """
     🔍 Busca trechos de código relevantes no PR atual usando busca semântica vetorial.
 
@@ -60,12 +63,12 @@ def search_pr_code(query: str, top_k: int = 5, filter_extension: Optional[str] =
         return "❌ Sistema de busca não está disponível. Informe ao desenvolvedor."
 
     try:
-        logger.info(f"[TOOL: search_pr_code] Searching for: '{query}' (top_k={top_k}, filter={filter_extension})")
+        logger.info(
+            f"[TOOL: search_pr_code] Searching for: '{query}' (top_k={top_k}, filter={filter_extension})"
+        )
 
         result = _rag_manager.search(
-            query=query,
-            k=top_k,
-            filter_extension=filter_extension
+            query=query, k=top_k, filter_extension=filter_extension
         )
 
         return result
@@ -107,10 +110,14 @@ def search_informations(query: str, namespace: str) -> str:
         search_informations("race conditions em operações assíncronas", "logical")
     """
     try:
-        logger.info(f"[TOOL: search_informations] Searching in namespace='{namespace}' for query='{query}'")
+        logger.info(
+            f"[TOOL: search_informations] Searching in namespace='{namespace}' for query='{query}'"
+        )
         pinecone = PineconeManager(namespace)
         relevant_chunks = pinecone.search_documents(query, k=3)
-        logger.info(f"[TOOL: search_informations] Found {len(relevant_chunks)} relevant document chunks")
+        logger.info(
+            f"[TOOL: search_informations] Found {len(relevant_chunks)} relevant document chunks"
+        )
 
         if not relevant_chunks:
             return f"Nenhuma informação encontrada para '{query}' no namespace '{namespace}'. Tente reformular a query ou verificar se o namespace está correto."

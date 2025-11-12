@@ -36,7 +36,7 @@ async def run_hierarchical_pr_analysis(files: list) -> str:
         "all_files": files,
         "modules": {},
         "module_analyses": [],
-        "final_report": ""
+        "final_report": "",
     }
 
     final_state = await app.ainvoke(initial_state)

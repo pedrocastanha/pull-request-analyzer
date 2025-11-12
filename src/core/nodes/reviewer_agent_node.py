@@ -76,8 +76,7 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
 
         response = await agent.ainvoke(
-            {"context": context},
-            config={"callbacks": [callback]}
+            {"context": context}, config={"callbacks": [callback]}
         )
 
         callback.print_summary()
@@ -94,7 +93,11 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         analysis_result = parse_llm_json_response(analysis_text)
 
-        comments_count = len(analysis_result.get("comments", [])) if isinstance(analysis_result.get("comments"), list) else 0
+        comments_count = (
+            len(analysis_result.get("comments", []))
+            if isinstance(analysis_result.get("comments"), list)
+            else 0
+        )
         logger.info(
             f"[NODE: reviewer_analysis] ✓ Generated {comments_count} comment(s)"
         )

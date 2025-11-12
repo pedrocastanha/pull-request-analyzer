@@ -52,11 +52,12 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             tools=[search_informations, search_pr_code], agent_name="Performance"
         )
 
-        logger.info(f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars")
+        logger.info(
+            f"[NODE: performance_analysis] Invoking agent with context size: {len(context)} chars"
+        )
 
         response = await agent.ainvoke(
-            {"context": context},
-            config={"callbacks": [callback]}
+            {"context": context}, config={"callbacks": [callback]}
         )
 
         callback.print_summary()
@@ -73,7 +74,11 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
         analysis_result = parse_llm_json_response(analysis_text)
 
-        issues_count = len(analysis_result.get("issues", [])) if isinstance(analysis_result.get("issues"), list) else 0
+        issues_count = (
+            len(analysis_result.get("issues", []))
+            if isinstance(analysis_result.get("issues"), list)
+            else 0
+        )
         logger.info(
             f"[NODE: performance_analysis] ✓ Analysis complete. "
             f"Found {issues_count} performance issue(s)"
