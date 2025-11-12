@@ -1,3 +1,5 @@
+from .shared_guidelines import TONE_GUIDELINES
+
 class Logical:
     SYSTEM_PROMPT = """
 # 🧠 Logical Analysis Agent
@@ -109,9 +111,9 @@ search_informations(
 Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
-{{
+{{{{
     "issues": [
-        {{
+        {{{{
             "file": "src/utils/calculator.py",
             "line": 23,
             "final_line": 23,
@@ -124,13 +126,13 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "recommendation": "Adicionar validação antes da divisão",
             "example": "result = total / count if count != 0 else 0",
             "reference": null
-        }}
+        }}}}
     ]
-}}
+}}}}
 ```
 
 **IMPORTANTE:**
-- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Inclua `scenario` descrevendo quando o bug ocorre
@@ -232,4 +234,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 **Pergunte-se:** "Isso é um bug REAL ou apenas ausência de validação defensiva redundante?"
 
 Seja um QA pragmático, não um paranoico. Aponte apenas bugs que valem ser corrigidos.
-"""
+
+""" + TONE_GUIDELINES

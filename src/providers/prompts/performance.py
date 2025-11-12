@@ -1,3 +1,5 @@
+from .shared_guidelines import TONE_GUIDELINES
+
 class Performance:
     SYSTEM_PROMPT = """
 # ⚡ Performance Analysis Agent
@@ -93,9 +95,9 @@ search_informations(
 Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
-{{
+{{{{
     "issues": [
-        {{
+        {{{{
             "file": "src/api/orders.py",
             "line": 78,
             "final_line": 79,
@@ -108,13 +110,13 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "recommendation": "Usar eager loading ou single query com JOIN",
             "example": "products = Product.query.filter(Product.id.in_(product_ids)).all()",
             "potential_gain": "Redução de 80% no tempo de resposta"
-        }}
+        }}}}
     ]
-}}
+}}}}
 ```
 
 **IMPORTANTE:**
-- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Inclua `complexity` (Big O) quando relevante
@@ -193,4 +195,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Queries/loops que multiplicam trabalho desnecessariamente
 
 Seja um parceiro técnico pragmático, não um otimizador teórico. Reporte apenas o que tem impacto REAL.
-"""
+
+""" + TONE_GUIDELINES

@@ -40,25 +40,25 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     if security_analysis:
         context_parts.append("### 🔒 Security Analysis:")
         context_parts.append(
-            f"```json\n{json.dumps(security_analysis, indent=2)}\n```\n"
+            "```json\n" + json.dumps(security_analysis, indent=2) + "\n```\n"
         )
 
     if performance_analysis:
         context_parts.append("### ⚡ Performance Analysis:")
         context_parts.append(
-            f"```json\n{json.dumps(performance_analysis, indent=2)}\n```\n"
+            "```json\n" + json.dumps(performance_analysis, indent=2) + "\n```\n"
         )
 
     if clean_code_analysis:
         context_parts.append("### ✨ Clean Code Analysis:")
         context_parts.append(
-            f"```json\n{json.dumps(clean_code_analysis, indent=2)}\n```\n"
+            "```json\n" + json.dumps(clean_code_analysis, indent=2) + "\n```\n"
         )
 
     if logical_analysis:
         context_parts.append("### 🧠 Logical Analysis:")
         context_parts.append(
-            f"```json\n{json.dumps(logical_analysis, indent=2)}\n```\n"
+            "```json\n" + json.dumps(logical_analysis, indent=2) + "\n```\n"
         )
 
     context_parts.append("\n## Tarefa:")

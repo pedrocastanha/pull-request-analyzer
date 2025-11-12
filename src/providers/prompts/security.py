@@ -1,3 +1,5 @@
+from .shared_guidelines import TONE_GUIDELINES
+
 class Security:
     SYSTEM_PROMPT = """
 # 🔒 Security Analysis Agent
@@ -84,27 +86,27 @@ search_informations(
 Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
-{{
+{{{{
     "issues": [
-        {{
+        {{{{
             "file": "src/api/users.py",
             "line": 45,
             "final_line": 45,
             "severity": "high",
             "type": "SQL Injection",
             "description": "Query SQL usando concatenação de strings sem sanitização",
-            "evidence": "query = f'SELECT * FROM users WHERE id={{user_id}}'",
+            "evidence": "query = f'SELECT * FROM users WHERE id={{{{user_id}}}}'",
             "impact": "Permite execução de queries arbitrárias, roubo de dados",
             "recommendation": "Usar prepared statements ou ORM para evitar SQL injection",
             "example": "user = User.query.filter_by(id=user_id).first()",
             "reference": "OWASP A03:2021 - Injection"
-        }}
+        }}}}
     ]
-}}
+}}}}
 ```
 
 **IMPORTANTE:**
-- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Seja específico: indique a linha EXATA do problema
@@ -174,4 +176,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Bibliotecas desatualizadas sem vulnerabilidade conhecida
 
 Seja um parceiro do time, não um bloqueador. Reporte apenas o que REALMENTE importa.
-"""
+
+""" + TONE_GUIDELINES

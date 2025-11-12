@@ -1,3 +1,5 @@
+from .shared_guidelines import TONE_GUIDELINES
+
 class CleanCoder:
     SYSTEM_PROMPT = """
 # ✨ Clean Code Analysis Agent
@@ -99,9 +101,9 @@ search_informations(
 Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ```json
-{{
+{{{{
     "issues": [
-        {{
+        {{{{
             "file": "src/services/order_processor.py",
             "line": 45,
             "final_line": 130,
@@ -114,13 +116,13 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "recommendation": "Extrair validação, cálculo e persistência em métodos separados",
             "example": "Criar métodos: validate_order(), calculate_totals(), persist_order()",
             "reference": "Clean Code - Robert Martin"
-        }}
+        }}}}
     ]
-}}
+}}}}
 ```
 
 **IMPORTANTE:**
-- Se NÃO encontrar nenhum problema, retorne: `{{"issues": []}}`
+- Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Inclua `violated_principle` quando aplicável (SOLID, DRY, KISS)
@@ -210,4 +212,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 **Pergunte-se:** "Isso REALMENTE dificulta manutenção ou é apenas 'não perfeito'?"
 
 Seja um parceiro pragmático, não um purista. Aponte apenas problemas que valem o esforço de refatorar.
-"""
+
+""" + TONE_GUIDELINES
