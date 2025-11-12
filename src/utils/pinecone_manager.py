@@ -27,7 +27,12 @@ class PineconeManager:
         logger.info(f"Initializing PineconeManager with namespace: {namespace}")
         self.namespace = namespace
 
-        self.pinecone = Pinecone(api_key=Settings.PINECONE_API_KEY)
+        api_key = Settings.PINECONE_API_KEY
+        if not api_key:
+            logger.error("PINECONE_API_KEY is empty or None")
+            raise ValueError("PINECONE_API_KEY cannot be empty")
+
+        self.pinecone = Pinecone(api_key=api_key)
         self.index_name = index_name
 
         logger.info("Setting up OpenAI embeddings")

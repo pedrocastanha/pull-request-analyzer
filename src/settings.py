@@ -14,4 +14,4 @@ class Settings:
     GEMINI_MODEL_NAME = os.getenv("GEMINI_MODEL_NAME")
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     PINECONE_INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
-    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY", "").strip()
