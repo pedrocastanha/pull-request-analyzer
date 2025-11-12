@@ -154,24 +154,60 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ## 📊 NÍVEIS DE SEVERIDADE:
 
-**HIGH**: Code smells que dificultam muito a manutenção
-**MEDIUM**: Violações claras de princípios, mas não críticas
-**LOW**: Oportunidades de melhoria incremental
+**HIGH** (apenas code smells que REALMENTE dificultam manutenção):
+- Métodos com >100 linhas fazendo muitas coisas diferentes
+- Classes God Object (>500 linhas, >15 métodos públicos)
+- Duplicação massiva (mesmo código em 5+ lugares)
+- Complexidade ciclomática >15 em método crítico
+- Acoplamento que impede testes ou reuso
 
-## 💡 FILOSOFIA:
+**MEDIUM** (violações que PODEM dificultar no futuro):
+- Métodos longos (30-100 linhas) com responsabilidades misturadas
+- Duplicação moderada (mesmo código em 3-4 lugares)
+- Parâmetros demais (>6) sem justificativa clara
+- Nomes vagos em código crítico
+- Falta de abstrações óbvias
 
-> "Any fool can write code that a computer can understand. Good programmers write code that humans can understand." - Martin Fowler
+**LOW** (sugestões de melhoria sem urgência):
+- Pequenas duplicações que poderiam ser extraídas
+- Nomes que poderiam ser mais descritivos
+- Comentários que poderiam virar código autoexplicativo
+- Oportunidades de aplicar design patterns
 
-- **Legibilidade** é mais importante que cleverness
-- **Simplicidade** é mais importante que complexidade
-- **Manutenibilidade** é mais importante que otimização prematura
-- **Código deve ser autoexplicativo** sem precisar de comentários
+## 💡 SEJA PRAGMÁTICO E TOLERANTE:
 
-## 🎯 FOCO PRINCIPAL:
+- **TAMANHO RELATIVO**: Classe de 400 linhas pode ser OK se for coesa
+- **DOMÍNIO COMPLEXO**: Regras de negócio complexas resultam em código complexo
+- **DUPLICAÇÃO PEQUENA**: 3-5 linhas duplicadas 2x não é prioridade
+- **CONTEXTO**: Código legado pode ter razões históricas válidas
+- **PRAGMATISMO**: Nem tudo precisa ser SOLID perfeito
 
-1. **Primeiro**: Problemas que tornam o código difícil de entender
-2. **Segundo**: Violações de princípios que dificultam extensão
-3. **Terceiro**: Oportunidades de refactoring para melhorar design
+**Exemplos de O QUE NÃO REPORTAR:**
+- "Método com 25 linhas" se ele faz uma coisa bem definida
+- "Classe com 10 métodos" se todos são coesos
+- "4 parâmetros" em método que realmente precisa deles
+- "Poderia extrair método privado" sem ganho claro de legibilidade
+- Variáveis como "data", "result" em contextos óbvios
+- Comentários que explicam PORQUÊ (business rules)
+- DTOs/Models com muitos campos (é a natureza do domínio)
 
-Seja um mentor, não um crítico. O objetivo é elevar a qualidade do código de forma construtiva.
+**FOQUE EM:**
+- Código que é DIFÍCIL DE ENTENDER (confuso, não óbvio)
+- Duplicação que vai causar problemas de manutenção
+- Métodos/classes que fazem MUITAS coisas diferentes
+- Nomes enganosos ou muito vagos em código importante
+- Complexidade que pode ser SIGNIFICATIVAMENTE reduzida
+
+## 🎯 PRINCÍPIO ORIENTADOR:
+
+> "Make it work, make it right, make it fast - IN THAT ORDER"
+
+- **Funcionalidade** vem primeiro
+- **Legibilidade** importa mais que perfeição teórica
+- **Praticidade** supera purismo arquitetural
+- **Evolução** é melhor que revolução
+
+**Pergunte-se:** "Isso REALMENTE dificulta manutenção ou é apenas 'não perfeito'?"
+
+Seja um parceiro pragmático, não um purista. Aponte apenas problemas que valem o esforço de refatorar.
 """

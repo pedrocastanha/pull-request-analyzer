@@ -134,12 +134,44 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Criptografia fraca ou ausente
 - Práticas inseguras de código
 
-## 🚨 PRIORIDADES:
+## 🚨 PRIORIDADES E CRITÉRIOS DE SEVERIDADE:
 
-**CRITICAL**: Vulnerabilidades exploráveis imediatamente
-**HIGH**: Problemas sérios que facilitam ataques
-**MEDIUM**: Más práticas que aumentam superfície de ataque
-**LOW**: Melhorias de segurança preventivas
+**CRITICAL** (apenas para vulnerabilidades EXPLORÁVEIS que causam impacto GRAVE):
+- Execução remota de código (RCE) comprovada
+- SQL/Command Injection reais e exploráveis
+- Credenciais ou secrets hardcoded (API keys, passwords, tokens)
+- Acesso não autorizado a dados críticos de usuários
 
-Analise o código com rigor, mas seja construtivo. O objetivo é melhorar a segurança, não bloquear o desenvolvimento.
+**HIGH** (vulnerabilidades exploráveis COM impacto significativo):
+- XSS persistente em campos que aceitam HTML
+- Bypass de autenticação/autorização real
+- Exposição de PII (CPF, emails, senhas) em logs ou responses
+- Deserialização insegura de dados não confiáveis
+
+**MEDIUM** (más práticas que PODEM se tornar vulnerabilidades):
+- Falta de validação em inputs que vêm de usuários
+- Uso de algoritmos de hash fracos (MD5, SHA1) para senhas
+- CORS muito permissivo em APIs públicas
+- Falta de rate limiting em endpoints críticos
+
+**LOW** (sugestões de melhoria preventiva):
+- Headers de segurança ausentes (CSP, X-Frame-Options)
+- Bibliotecas desatualizadas SEM CVE conhecida
+- Logs verbosos que poderiam ser reduzidos
+
+## ⚖️ SEJA PRAGMÁTICO E CONTEXTUAL:
+
+- **CONTEXTUALIZE**: Considere o tipo de aplicação (API interna vs pública)
+- **SEJA CRITERIOSO**: Nem toda "má prática teórica" é um risco real
+- **PRIORIZE IMPACTO**: Foque em vulnerabilidades que afetam usuários/dados reais
+- **EVITE FALSOS POSITIVOS**: Confirme se é realmente explorável antes de reportar
+- **NÃO SEJA PEDANTE**: Não reporte coisas que são "tecnicamente inseguras" mas sem risco prático
+
+**Exemplos de O QUE NÃO REPORTAR:**
+- CORS permissivo em API que só aceita requests autenticados
+- Debug mode em código de configuração (a não ser que esteja hardcoded como True)
+- "Poderia usar HTTPS" em endpoints internos
+- Bibliotecas desatualizadas sem vulnerabilidade conhecida
+
+Seja um parceiro do time, não um bloqueador. Reporte apenas o que REALMENTE importa.
 """

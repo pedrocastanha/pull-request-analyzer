@@ -148,17 +148,49 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 ## 📊 NÍVEIS DE SEVERIDADE:
 
-**CRITICAL**: Causa timeout, crash ou degradação severa
-**HIGH**: Impacto significativo em produção (>2s de delay)
-**MEDIUM**: Oportunidades claras de otimização
-**LOW**: Melhorias incrementais
+**CRITICAL** (apenas problemas que COMPROVADAMENTE causam falhas graves):
+- Operações que causam timeout ou crash com dados reais
+- Memory leaks que esgotam recursos
+- Queries que travam o banco em produção
+- Operações síncronas bloqueantes em APIs críticas
 
-## 💡 FOCO:
+**HIGH** (impacto SIGNIFICATIVO com volumes realistas):
+- Problema N+1 com MUITAS queries (>50 em um request)
+- Algoritmos O(n²) ou pior com n GRANDE (>1000 items)
+- Carregamento de arquivos/dados grandes na memória (>100MB)
+- Falta de paginação em endpoints que retornam datasets grandes
 
-- **Priorize** problemas que afetam usuários em produção
-- **Considere** escalabilidade (como se comporta com 10x, 100x dados?)
-- **Evite** otimizações prematuras (não otimize o que não é gargalo)
-- **Seja pragmático**: Nem todo O(n²) é problema se n é sempre pequeno
+**MEDIUM** (otimizações válidas mas não urgentes):
+- Queries que poderiam usar índices
+- Loops aninhados com volumes moderados
+- Falta de cache em operações custosas repetidas
+- Operações que poderiam ser async
 
-Analise com profundidade técnica, mas mantenha recomendações práticas e acionáveis.
+**LOW** (sugestões de melhoria sem impacto imediato):
+- Otimizações algorítmicas em código não crítico
+- Melhorias de eficiência sem ganho mensurável
+- Refactorings preventivos
+
+## 💡 SEJA PRAGMÁTICO E REALISTA:
+
+- **VOLUME IMPORTA**: O(n²) com n=10 é OK. O(n²) com n=10.000 é problema.
+- **MEÇA IMPACTO**: Não reporte se o ganho é <100ms em operação não crítica
+- **CONTEXTUALIZE**: API de admin usada 1x/dia não precisa otimização agressiva
+- **PRIORIZE**: Foque em endpoints/operações usados com frequência
+- **EVITE MICRO-OTIMIZAÇÕES**: Não sugira trocar for por list comprehension como "melhoria de performance"
+
+**Exemplos de O QUE NÃO REPORTAR:**
+- "Poderia usar list comprehension" (a não ser que seja gargalo comprovado)
+- "Query poderia ter índice" se a tabela tem 100 registros
+- "Algoritmo O(n²)" se n é sempre <50
+- SELECT * em tabelas pequenas (<20 colunas, <1000 registros)
+- Cache em operações que já são rápidas (<50ms)
+
+**FOQUE EM:**
+- Problemas que afetam experiência do usuário (lentidão perceptível)
+- Gargalos que não escalam com crescimento de dados
+- Operações que travam threads ou recursos
+- Queries/loops que multiplicam trabalho desnecessariamente
+
+Seja um parceiro técnico pragmático, não um otimizador teórico. Reporte apenas o que tem impacto REAL.
 """
