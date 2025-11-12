@@ -17,6 +17,42 @@ def set_rag_manager(rag_manager):
 
 @tool
 def search_pr_code(query: str, top_k: int = 5, filter_extension: Optional[str] = None) -> str:
+    """
+    🔍 Busca trechos de código relevantes no PR atual usando busca semântica vetorial.
+
+    QUANDO USAR:
+    - Ao procurar código relacionado a um tópico específico
+    - Para verificar se existem mudanças em determinada área
+    - Antes de analisar, para encontrar trechos relevantes
+
+    Args:
+        query: Descrição do que você procura. Seja específico e use termos técnicos.
+               Exemplos:
+                 - "código que faz autenticação de usuários"
+                 - "queries SQL ou acesso a banco de dados"
+                 - "validação de entrada de usuários"
+                 - "uso de bibliotecas de criptografia"
+
+        top_k: Quantos trechos retornar (padrão: 5, máximo recomendado: 10)
+
+        filter_extension: Filtrar por tipo de arquivo (opcional)
+                         Exemplos: "py", "ts", "java", "js"
+
+    Returns:
+        String contendo os trechos de código mais relevantes encontrados,
+        com informações do arquivo, linhas modificadas e o diff.
+
+    IMPORTANTE:
+    - Esta tool busca APENAS no código do PR atual (não em livros técnicos)
+    - Para buscar em livros técnicos, use search_informations
+    - Faça queries ESPECÍFICAS para melhores resultados
+    - Se não encontrar nada, tente reformular a query
+
+    Exemplos de uso:
+        search_pr_code("autenticação com JWT ou tokens")
+        search_pr_code("loops aninhados ou iterações", top_k=3)
+        search_pr_code("imports de bibliotecas de segurança", filter_extension="py")
+    """
     global _rag_manager
 
     if _rag_manager is None:
@@ -41,6 +77,35 @@ def search_pr_code(query: str, top_k: int = 5, filter_extension: Optional[str] =
 
 @tool
 def search_informations(query: str, namespace: str) -> str:
+    """
+    Esta tool acessa uma base de conhecimento vetorial (Pinecone) contendo conteúdo de livros
+    técnicos especializados em diferentes áreas de engenharia de software.
+
+    Args:
+        query: Descrição do que você precisa buscar. Seja específico e use termos técnicos.
+               Exemplo: "N+1 query problem e soluções com eager loading"
+
+        namespace: Namespace da base de conhecimento a ser consultada. Valores válidos:
+            - "security": Livros sobre segurança (OWASP, Secure Coding, etc.)
+            - "performance": Livros sobre otimização e performance
+            - "clean_code": Livros sobre Clean Code, SOLID, refactoring (Martin, Fowler, etc.)
+            - "logical": Livros sobre debugging, análise lógica e edge cases
+
+    Returns:
+        String contendo os 3 trechos mais relevantes encontrados nos livros, ranqueados por
+        similaridade semântica com a query. Use estas informações para validar suas análises.
+
+    Quando usar:
+        - Ao identificar um padrão suspeito e querer confirmar se é um problema conhecido
+        - Para buscar a solução correta/recomendada para um problema específico
+        - Quando tiver dúvida sobre boas práticas ou padrões
+        - Para validar se sua análise está alinhada com a literatura técnica
+
+    Exemplos de uso:
+        search_informations("SQL injection prevenção prepared statements", "security")
+        search_informations("complexidade ciclomática e refactoring", "clean_code")
+        search_informations("race conditions em operações assíncronas", "logical")
+    """
     try:
         logger.info(f"[TOOL: search_informations] Searching in namespace='{namespace}' for query='{query}'")
         pinecone = PineconeManager(namespace)
