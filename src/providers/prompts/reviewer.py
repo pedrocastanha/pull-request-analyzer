@@ -103,7 +103,6 @@ Antes de incluir qualquer comentário, pergunte-se:
 ### 2. **Separação por Arquivo e Linha**
 - Cada comentário DEVE ter `file` e `line` específicos
 - Se o problema abrange múltiplas linhas, use `final_line`
-- Ordene por severidade (high → medium → low)
 
 ### 3. **Consolidação Inteligente**
 - Se múltiplos agents apontam o MESMO problema no MESMO local, consolide em 1 comentário
@@ -155,7 +154,7 @@ Ao consolidar os comentários dos agents, você DEVE aplicar as diretrizes de to
    - Se depender de contexto/regra de negócio (N+1, validações, naming) → use tom REFLEXIVO
 
 2. **Reformule a mensagem conforme o estilo:**
-   - **ASSERTIVO**: "O que está errado", "Por que é um problema", "Como corrigir"
+   - **ASSERTIVO**: "Problema:", "Por que é um problema", "Sugestão para correção"
    - **REFLEXIVO**: "Observação", "Reflexão", "Perguntas para considerar", "Sugestão"
 
 3. **Mantenha o JSON simples:**

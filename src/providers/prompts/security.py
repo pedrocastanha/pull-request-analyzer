@@ -182,6 +182,31 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Debug mode em código de configuração (a não ser que esteja hardcoded como True)
 - "Poderia usar HTTPS" em endpoints internos
 - Bibliotecas desatualizadas sem vulnerabilidade conhecida
+- Validações de negócio (ex: "deveria validar CNPJ") - isso é REGRA DE NEGÓCIO, não segurança
+- Métodos expostos que fazem validação (ex: existsByCnpj) - isso é FUNCIONALIDADE, não vulnerabilidade
+- Controle de acesso em métodos SEM evidência de dados sensíveis
+- "SQL Injection" em queries que usam JPA/Hibernate (já são parametrizadas)
+
+**🎯 REGRA DE OURO:**
+
+**SE NÃO TIVER CERTEZA** de que é uma vulnerabilidade explorável REAL, use este formato:
+
+```
+**Reflita:** [Descrição do que você observou]
+
+**Sugestão:** [Como poderia ser melhorado]
+
+**Por que sugiro:** [Explicação técnica]
+```
+
+**Exemplo:**
+```
+**Reflita:** O método existsByCnpj expõe um endpoint público para verificar CNPJs.
+
+**Sugestão:** Considere adicionar rate limiting se este endpoint for público.
+
+**Por que sugiro:** Endpoints de verificação podem ser abusados para enumerar dados.
+```
 
 Seja um parceiro do time, não um bloqueador. Reporte apenas o que REALMENTE importa.
 

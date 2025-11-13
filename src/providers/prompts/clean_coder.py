@@ -202,6 +202,8 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Variáveis como "data", "result" em contextos óbvios
 - Comentários que explicam PORQUÊ (business rules)
 - DTOs/Models com muitos campos (é a natureza do domínio)
+- Classes de serviço grandes que lidam com domínio complexo
+- Métodos de validação que precisam checar múltiplas regras de negócio
 
 **FOQUE EM:**
 - Código que é DIFÍCIL DE ENTENDER (confuso, não óbvio)
@@ -220,6 +222,27 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - **Evolução** é melhor que revolução
 
 **Pergunte-se:** "Isso REALMENTE dificulta manutenção ou é apenas 'não perfeito'?"
+
+**🎯 REGRA DE OURO:**
+
+**SE FOR SUGESTÃO** de melhoria (não problema claro), use este formato:
+
+```
+**Reflita:** [Descrição do que você observou]
+
+**Sugestão:** [Como poderia ser melhorado]
+
+**Por que sugiro:** [Benefício da refatoração]
+```
+
+**Exemplo:**
+```
+**Reflita:** A classe EmpresaService tem 306 linhas com validações, persistência e lógica de negócio.
+
+**Sugestão:** Considere extrair validações para uma classe ValidadorEmpresa separada.
+
+**Por que sugiro:** Facilitaria testes isolados das validações e reduziria a responsabilidade da classe de serviço.
+```
 
 Seja um parceiro pragmático, não um purista. Aponte apenas problemas que valem o esforço de refatorar.
 

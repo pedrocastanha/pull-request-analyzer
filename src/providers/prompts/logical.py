@@ -210,6 +210,8 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - "E se N for negativo?" quando N vem de len() ou count()
 - Validações redundantes quando já existe validação em outro lugar
 - Edge cases teóricos que nunca acontecem no fluxo real
+- NullPointerException em Optional quando sempre está presente no contexto
+- "Falta validação de CNPJ" quando é responsabilidade da camada de negócio
 
 **FOQUE EM:**
 - Bugs que REALMENTE causam crash ou comportamento errado
@@ -237,6 +239,27 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Nem toda operação precisa de try-catch
 
 **Pergunte-se:** "Isso é um bug REAL ou apenas ausência de validação defensiva redundante?"
+
+**🎯 REGRA DE OURO:**
+
+**SE NÃO TIVER CERTEZA** se é um bug real ou apenas robustez defensiva, use este formato:
+
+```
+**Reflita:** [Descrição do edge case observado]
+
+**Sugestão:** [Como tratar o edge case]
+
+**Por que sugiro:** [Explicação de quando poderia ocorrer]
+```
+
+**Exemplo:**
+```
+**Reflita:** O método getContatos() retorna uma lista que é iterada sem verificação de null.
+
+**Sugestão:** Considere adicionar validação se getContatos() pode retornar null.
+
+**Por que sugiro:** Evitaria NullPointerException caso a inicialização da lista falhe.
+```
 
 Seja um QA pragmático, não um paranoico. Aponte apenas bugs que valem ser corrigidos.
 
