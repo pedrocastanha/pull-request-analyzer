@@ -82,23 +82,47 @@ O campo `message` deve ser UMA string completa contendo TODAS as informações, 
 ## 📋 REGRAS PARA GERAÇÃO DE COMENTÁRIOS:
 
 ### 1. **FILTRAGEM PRAGMÁTICA - MUITO IMPORTANTE!**
-Antes de incluir qualquer comentário, pergunte-se:
-- **É REALMENTE um problema?** Ou é apenas "não perfeito"?
-- **Tem IMPACTO real?** Vai causar bug, lentidão, ou dificuldade de manutenção?
-- **Vale o esforço?** O benefício de corrigir justifica o trabalho?
 
-**NÃO inclua comentários que sejam:**
-- Sugestões teóricas sem benefício prático claro
-- Otimizações prematuras ou micro-otimizações
-- Refatorings de código que já está legível
-- Validações redundantes quando já existe proteção em outra camada
-- "Poderia ser melhor" sem impacto concreto
+**Para CADA issue dos agents, aplique estes filtros:**
 
-**FOQUE APENAS em:**
-- Bugs que causam crash ou comportamento incorreto
-- Vulnerabilidades de segurança exploráveis
-- Problemas de performance com impacto perceptível
-- Code smells que REALMENTE dificultam manutenção
+#### 🚫 **DESCARTE AUTOMATICAMENTE:**
+
+**Issues sobre Regras de Negócio (não são bugs técnicos):**
+- ❌ Validação de CNPJ, CPF, email → responsabilidade da camada de aplicação
+- ❌ "Método exposto" quando é funcionalidade normal (ex: existsByCnpj, existsByEmail)
+- ❌ "Falta controle de acesso" sem evidência concreta de dados sensíveis
+- ❌ "Falta validação" quando já tem validação em controller/DTO
+
+**Issues sobre Performance sem evidência:**
+- ❌ Loop aninhado com volumes pequenos (<20 items como contatos/endereços)
+- ❌ "Poderia usar Set/Map" sem prova de problema real
+- ❌ O(n²) quando n é sempre pequeno (<50)
+
+**Issues sobre Clean Code subjetivos:**
+- ❌ Classe "grande" que lida com domínio complexo (300 linhas é normal)
+- ❌ Método "longo" que implementa regras de negócio (50-100 linhas é aceitável)
+- ❌ "Poderia refatorar" sem ganho claro de legibilidade
+
+**Issues sobre Segurança falsos:**
+- ❌ "SQL Injection" em JPA/Hibernate (já é parametrizado)
+- ❌ "Possível vulnerabilidade" sem exemplo concreto de exploração
+
+**Issues sobre Lógica sem evidência:**
+- ❌ NullPointerException em Optional sem prova de que pode ser null
+- ❌ Edge cases teóricos que não acontecem no fluxo real
+
+#### ✅ **ACEITE APENAS:**
+
+1. **Bugs reais** com linha específica e evidência clara
+2. **Vulnerabilidades** com exemplo de exploração
+3. **N+1 queries** com muitas iterações (>50 queries)
+4. **Memory leaks** ou bloqueios de recursos
+5. **Lógica incorreta** (não "poderia ser mais robusta")
+6. **Duplicação massiva** (>50 linhas em 5+ lugares)
+
+**REGRA DE OURO:** Na dúvida se vale reportar → **NÃO reporte**.
+
+**Meta: Aceite apenas 20-30% dos issues dos agents (os realmente críticos).**
 
 ### 2. **Separação por Arquivo e Linha**
 - Cada comentário DEVE ter `file` e `line` específicos
