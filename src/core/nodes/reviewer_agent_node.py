@@ -33,32 +33,58 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         f"Logical={logical_analysis is not None}"
     )
 
+    def extract_essential_fields(analysis):
+        if not isinstance(analysis, dict) or "issues" not in analysis:
+            return analysis
+
+        essential_issues = []
+        for issue in analysis.get("issues", []):
+            essential_issues.append({
+                "title": issue.get("title"),
+                "description": issue.get("description"),
+                "severity": issue.get("severity"),
+                "file": issue.get("file"),
+                "line": issue.get("line"),
+                "impact": issue.get("impact"),
+                "evidence": issue.get("evidence"),
+                "example": issue.get("example")
+            })
+
+        return {
+            "issues": essential_issues,
+            "summary": analysis.get("summary")
+        }
+
     context_parts = []
     context_parts.append(f"# Pull Request #{pr_id} - Review Final\n")
     context_parts.append("## Análises Disponíveis:\n")
 
     if security_analysis:
         context_parts.append("### 🔒 Security Analysis:")
+        essential_security = extract_essential_fields(security_analysis)
         context_parts.append(
-            "```json\n" + json.dumps(security_analysis, indent=2) + "\n```\n"
+            "```json\n" + json.dumps(essential_security, indent=2) + "\n```\n"
         )
 
     if performance_analysis:
         context_parts.append("### ⚡ Performance Analysis:")
+        essential_performance = extract_essential_fields(performance_analysis)
         context_parts.append(
-            "```json\n" + json.dumps(performance_analysis, indent=2) + "\n```\n"
+            "```json\n" + json.dumps(essential_performance, indent=2) + "\n```\n"
         )
 
     if clean_code_analysis:
         context_parts.append("### ✨ Clean Code Analysis:")
+        essential_clean_code = extract_essential_fields(clean_code_analysis)
         context_parts.append(
-            "```json\n" + json.dumps(clean_code_analysis, indent=2) + "\n```\n"
+            "```json\n" + json.dumps(essential_clean_code, indent=2) + "\n```\n"
         )
 
     if logical_analysis:
         context_parts.append("### 🧠 Logical Analysis:")
+        essential_logical = extract_essential_fields(logical_analysis)
         context_parts.append(
-            "```json\n" + json.dumps(logical_analysis, indent=2) + "\n```\n"
+            "```json\n" + json.dumps(essential_logical, indent=2) + "\n```\n"
         )
 
     context_parts.append("\n## Tarefa:")

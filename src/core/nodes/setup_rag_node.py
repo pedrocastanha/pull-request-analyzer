@@ -4,6 +4,7 @@ from typing import Dict, Any
 from src.core.state import PRAnalysisState
 from src.providers.rag_manager import RAGManager
 from src.providers.tools import set_rag_manager
+from src.utils.file_filters import filter_analyzable_files
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +22,18 @@ def setup_rag_node(state: PRAnalysisState) -> Dict[str, Any]:
     try:
         rag_manager = RAGManager()
 
+        all_files = pr_data.get("files", [])
+        analyzable_files, ignored_files = filter_analyzable_files(all_files)
+
         logger.info(
-            f"[NODE: setup_rag] Indexing {pr_data.get('total_files', 0)} files..."
+            f"[NODE: setup_rag] Filtered files: {len(analyzable_files)} to analyze, "
+            f"{len(ignored_files)} ignored"
         )
 
-        rag_manager.create_from_pr_data(pr_data, chunk_size=800)
+        pr_data_filtered = pr_data.copy()
+        pr_data_filtered["files"] = analyzable_files
+
+        rag_manager.create_from_pr_data(pr_data_filtered, chunk_size=800)
 
         logger.info(f"[NODE: setup_rag] ✅ RAG created successfully")
 

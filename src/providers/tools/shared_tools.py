@@ -1,4 +1,6 @@
 import logging
+from contextvars import ContextVar
+from functools import lru_cache
 from typing import Optional
 
 from langchain_core.tools import tool
@@ -7,13 +9,12 @@ from src.utils.pinecone_manager import PineconeManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-_rag_manager = None
+_rag_manager_ctx: ContextVar[Optional['RAGManager']] = ContextVar('rag_manager', default=None)
 
 
 def set_rag_manager(rag_manager):
-    global _rag_manager
-    _rag_manager = rag_manager
-    logger.info("[TOOLS] RAG Manager injected into tools")
+    _rag_manager_ctx.set(rag_manager)
+    logger.info("[TOOLS] RAG Manager set for current context")
 
 
 @tool
@@ -56,9 +57,9 @@ def search_pr_code(
         search_pr_code("loops aninhados ou iterações", top_k=3)
         search_pr_code("imports de bibliotecas de segurança", filter_extension="py")
     """
-    global _rag_manager
+    rag_manager = _rag_manager_ctx.get()
 
-    if _rag_manager is None:
+    if rag_manager is None:
         logger.error("[TOOL: search_pr_code] RAG Manager not initialized!")
         return "❌ Sistema de busca não está disponível. Informe ao desenvolvedor."
 
@@ -67,7 +68,7 @@ def search_pr_code(
             f"[TOOL: search_pr_code] Searching for: '{query}' (top_k={top_k}, filter={filter_extension})"
         )
 
-        result = _rag_manager.search(
+        result = rag_manager.search(
             query=query, k=top_k, filter_extension=filter_extension
         )
 
@@ -76,6 +77,12 @@ def search_pr_code(
     except Exception as e:
         logger.error(f"[TOOL: search_pr_code] Error: {e}")
         return f"❌ Erro ao buscar código: {str(e)}"
+
+
+@lru_cache(maxsize=4)
+def _get_pinecone_manager(namespace: str) -> PineconeManager:
+    logger.info(f"[PINECONE] Creating new manager for namespace: {namespace}")
+    return PineconeManager(namespace)
 
 
 @tool
@@ -113,7 +120,7 @@ def search_informations(query: str, namespace: str) -> str:
         logger.info(
             f"[TOOL: search_informations] Searching in namespace='{namespace}' for query='{query}'"
         )
-        pinecone = PineconeManager(namespace)
+        pinecone = _get_pinecone_manager(namespace)
         relevant_chunks = pinecone.search_documents(query, k=3)
         logger.info(
             f"[TOOL: search_informations] Found {len(relevant_chunks)} relevant document chunks"

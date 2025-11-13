@@ -151,15 +151,12 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "file": "src/utils/calculator.py",
             "line": 23,
             "final_line": 23,
-            "severity": "high",
             "type": "Division by Zero",
             "description": "Divisão sem verificação se denominador é zero",
             "evidence": "result = total / count",
-            "scenario": "Quando count=0, causará ZeroDivisionError",
             "impact": "Crash da aplicação em runtime",
             "recommendation": "Adicionar validação antes da divisão",
-            "example": "result = total / count if count != 0 else 0",
-            "reference": null
+            "example": "result = total / count if count != 0 else 0"
         }}}}
     ]
 }}}}
@@ -167,20 +164,18 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 **IMPORTANTE:**
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
-- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
-- Inclua `scenario` descrevendo quando o bug ocorre
 - Explique o `impact` concreto (crash, dados errados, etc.)
 
 ## ⚠️ REGRAS IMPORTANTES:
 
 1. **Seja específico**: Indique exatamente qual cenário causa o bug
-2. **Cenários reais**: Descreva situações concretas onde o bug ocorre
-3. **Impacto**: Explique o que acontece quando o bug é atingido
-4. **Evidências**: Mostre o código problemático
-5. **Soluções**: Dê código corrigido
-6. **Use a tool**: Busque contexto com namespace="logical"
-7. **Teste mental**: Execute o código mentalmente com diferentes inputs
+2. **Impacto**: Explique o que acontece quando o bug é atingido
+3. **Evidências**: Mostre o código problemático
+4. **Soluções**: Dê código corrigido
+5. **Use a tool**: Busque contexto com namespace="logical"
+6. **Teste mental**: Execute o código mentalmente com diferentes inputs
 
 ## ❌ O QUE NÃO ANALISAR:
 
@@ -198,30 +193,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Problemas de sincronização ou race conditions
 - Exceções não tratadas que causam falhas
 
-## 📊 NÍVEIS DE SEVERIDADE:
-
-**CRITICAL** (apenas bugs que CAUSAM crash ou corrupção):
-- Divisão por zero sem tratamento
-- Acesso a índice fora do range sem validação
-- Null pointer/None access que causa exception
-- Deadlocks ou race conditions que travam a aplicação
-- Recursão infinita ou loop sem saída
-
-**HIGH** (bugs que causam comportamento incorreto GRAVE):
-- Lógica condicional invertida (ex: if user.is_admin quando deveria ser is_not_admin)
-- Comparações de tipo errado (== ao invés de ===, is ao invés de ==)
-- Off-by-one errors em iterações críticas
-- Await faltando em chamadas async críticas
-- Estado inconsistente após exceção
-
-**MEDIUM** (edge cases PROVÁVEIS não tratados):
-- Validação de None/null faltando em campos opcionais
-- Tratamento de lista vazia faltando
-- Exceções específicas não capturadas
-- Condições de contorno em loops
-
-**LOW** (robustez preventiva):
-- Try-catch muito genérico que poderia ser específico
 - Logging que poderia ser mais informativo
 - Validações defensivas adicionais
 

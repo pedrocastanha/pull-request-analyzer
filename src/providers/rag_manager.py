@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 class RAGManager:
     def __init__(self):
         self.vectorstore: Optional[FAISS] = None
+        self._embedding_cache: Dict[str, list] = {}
 
         openai_api_key = Settings.OPENAI_API_KEY
 
@@ -91,6 +92,16 @@ class RAGManager:
             logger.error(f"[RAG] ❌ Error creating vectorstore: {e}")
             raise
 
+    def _get_query_embedding(self, query: str) -> list:
+        if query in self._embedding_cache:
+            logger.info(f"[RAG] Cache HIT for query: '{query[:50]}...'")
+            return self._embedding_cache[query]
+
+        logger.info(f"[RAG] Cache MISS for query: '{query[:50]}...', generating embedding")
+        embedding = self.embeddings.embed_query(query)
+        self._embedding_cache[query] = embedding
+        return embedding
+
     def search(
         self, query: str, k: int = 5, filter_extension: Optional[str] = None
     ) -> str:
@@ -103,7 +114,8 @@ class RAGManager:
         logger.info(f"[RAG] Searching for: '{query}' (top {k})")
 
         try:
-            docs = self.vectorstore.similarity_search(query=query, k=k * 2)
+            query_embedding = self._get_query_embedding(query)
+            docs = self.vectorstore.similarity_search_by_vector(query_embedding, k=k * 2)
 
             if filter_extension:
                 docs = [
@@ -120,20 +132,11 @@ class RAGManager:
             if not docs:
                 return f"❌ Nenhum trecho de código encontrado para: '{query}'"
 
-            result_parts = [
-                f"🔍 Encontrados {len(docs)} trechos relevantes para: '{query}'\n"
-            ]
+            result_parts = [f"Encontrados {len(docs)} trechos:\n"]
 
             for i, doc in enumerate(docs, 1):
                 file_path = doc.metadata.get("file", "unknown")
-                extension = doc.metadata.get("extension", "unknown")
-                additions = doc.metadata.get("additions", 0)
-                deletions = doc.metadata.get("deletions", 0)
-
-                result_parts.append(f"\n{'='*60}")
-                result_parts.append(f"[{i}] 📄 Arquivo: {file_path} ({extension})")
-                result_parts.append(f"    Mudanças: +{additions} -{deletions}")
-                result_parts.append(f"{'='*60}")
+                result_parts.append(f"\n[{i}] {file_path}")
                 result_parts.append(doc.page_content)
 
             formatted_result = "\n".join(result_parts)
@@ -178,3 +181,10 @@ class RAGManager:
             self.vectorstore = None
         else:
             logger.info("[RAG] No vectorstore to cleanup")
+
+        if self._embedding_cache:
+            cache_size = len(self._embedding_cache)
+            logger.info(f"[RAG] 🗑️ Clearing embedding cache ({cache_size} entries)")
+            self._embedding_cache.clear()
+        else:
+            logger.info("[RAG] No embedding cache to cleanup")

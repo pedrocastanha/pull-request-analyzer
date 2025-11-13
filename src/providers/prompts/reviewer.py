@@ -42,14 +42,12 @@ Você DEVE retornar um JSON estruturado neste formato EXATO:
             "file": "src/api/users.py",
             "line": 45,
             "final_line": 45,
-            "severity": "high",
             "message": "**O que está errado:** Query SQL usando concatenação de strings.\\n\\n**Por que é um problema:** Permite SQL injection - atacante pode executar queries arbitrárias.\\n\\n**Como corrigir:** Use ORM:\\n```python\\nuser = User.query.filter_by(id=user_id).first()\\n```\\n\\n**Aprenda mais:** Pesquise 'OWASP SQL Injection prevention'"
         }}}},
         {{{{
             "file": "src/services/order.py",
             "line": 78,
             "final_line": 79,
-            "severity": "medium",
             "message": "**O que está errado:** Loop com query para cada item (N+1).\\n\\n**Por que é um problema:** 100 items = 100 queries = lentidão de 5+ segundos.\\n\\n**Como corrigir:** Use eager loading:\\n```python\\nids = [item.product_id for item in items]\\nproducts = Product.query.filter(Product.id.in_(ids)).all()\\n```\\n\\n**Aprenda mais:** Pesquise 'N+1 query problem'"
         }}}}
     ]
@@ -72,7 +70,6 @@ O campo `message` deve ser UMA string completa contendo TODAS as informações, 
 - APENAS retorne comentários para coisas que PRECISAM de atenção
 - Se os agents não encontraram problemas, retorne lista vazia
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
-- `severity` deve ser: "high", "medium", ou "low"
 - NÃO inclua campos extras como "title", "suggestion", "category", "reference"
 
 **CUIDADOS COM JSON:**
@@ -108,25 +105,17 @@ Antes de incluir qualquer comentário, pergunte-se:
 - Se o problema abrange múltiplas linhas, use `final_line`
 - Ordene por severidade (high → medium → low)
 
-### 3. **Severidade Clara e Rigorosa**
-- **critical**: Apenas vulnerabilidades CRÍTICAS ou bugs que causam crash garantido
-- **high**: Bugs graves, vulnerabilidades exploráveis, ou problemas sérios de performance
-- **medium**: Problemas reais mas não urgentes
-- **low**: Sugestões válidas de melhoria (use com MUITO critério)
-
-**IMPORTANTE:** Seja rigoroso com severity. Não classifique tudo como "high".
-
-### 4. **Consolidação Inteligente**
+### 3. **Consolidação Inteligente**
 - Se múltiplos agents apontam o MESMO problema no MESMO local, consolide em 1 comentário
 - Combine as informações dos agents em uma mensagem coerente
 - Não crie comentários duplicados
 
-### 5. **Mensagem Completa e Didática**
+### 4. **Mensagem Completa e Didática**
 Cada `message` deve ser autocontida e incluir:
-- **O que está errado**: Descrição clara e objetiva do problema
-- **Por que é um problema**: Impacto CONCRETO (crash? dados errados? lentidão mensurável?)
-- **Como corrigir**: Solução prática com exemplo de código
-- **Aprenda mais**: Termos de busca ou referências (opcional)
+- **Problema**: Descrição clara e objetiva do problema
+- **Por que**: Impacto CONCRETO (crash? dados errados? lentidão mensurável?)
+- **Sugestão de correção**: Solução prática com exemplo de código
+- **Pesquise sobre**: Termos de busca ou referências (opcional)
 
 Use markdown para formatação (negrito, código, quebras de linha)
 
@@ -170,7 +159,7 @@ Ao consolidar os comentários dos agents, você DEVE aplicar as diretrizes de to
    - **REFLEXIVO**: "Observação", "Reflexão", "Perguntas para considerar", "Sugestão"
 
 3. **Mantenha o JSON simples:**
-   - Mesmo formato JSON (file, line, severity, message)
+   - Mesmo formato JSON (file, line, message)
    - Apenas o conteúdo do campo `message` muda de tom
 """
     )

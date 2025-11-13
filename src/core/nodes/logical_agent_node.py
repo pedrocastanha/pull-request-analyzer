@@ -10,6 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
+    from src.providers.tools import set_rag_manager
+    rag_manager = state.get("_rag_manager")
+    if rag_manager:
+        set_rag_manager(rag_manager)
+
     pr_data = state.get("pr_data")
     if pr_data is None:
         error_msg = "Cannot analyze logical: pr_data is None"

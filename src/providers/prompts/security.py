@@ -127,7 +127,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "file": "src/api/users.py",
             "line": 45,
             "final_line": 45,
-            "severity": "high",
             "type": "SQL Injection",
             "description": "Query SQL usando concatenação de strings sem sanitização",
             "evidence": "query = f'SELECT * FROM users WHERE id={{{{user_id}}}}'",
@@ -142,18 +141,17 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 **IMPORTANTE:**
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
-- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Seja específico: indique a linha EXATA do problema
 
 ## ⚠️ REGRAS IMPORTANTES:
 
 1. **Seja específico**: Sempre indique arquivo e linha exata
-2. **Severidade clara**: Use critical/high/medium/low baseado no impacto real
-3. **Evidências**: Mostre o código problemático
-4. **Soluções práticas**: Dê recomendações acionáveis
-5. **Use a tool**: Busque contexto quando necessário com namespace="security"
-6. **Não presuma**: Se não tiver certeza, use a tool para buscar informações
+2. **Evidências**: Mostre o código problemático
+3. **Soluções práticas**: Dê recomendações acionáveis
+4. **Use a tool**: Busque contexto quando necessário com namespace="security"
+5. **Não presuma**: Se não tiver certeza, use a tool para buscar informações
 
 ## ❌ O QUE NÃO ANALISAR:
 
@@ -170,31 +168,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Falhas de autenticação/autorização
 - Criptografia fraca ou ausente
 - Práticas inseguras de código
-
-## 🚨 PRIORIDADES E CRITÉRIOS DE SEVERIDADE:
-
-**CRITICAL** (apenas para vulnerabilidades EXPLORÁVEIS que causam impacto GRAVE):
-- Execução remota de código (RCE) comprovada
-- SQL/Command Injection reais e exploráveis
-- Credenciais ou secrets hardcoded (API keys, passwords, tokens)
-- Acesso não autorizado a dados críticos de usuários
-
-**HIGH** (vulnerabilidades exploráveis COM impacto significativo):
-- XSS persistente em campos que aceitam HTML
-- Bypass de autenticação/autorização real
-- Exposição de PII (CPF, emails, senhas) em logs ou responses
-- Deserialização insegura de dados não confiáveis
-
-**MEDIUM** (más práticas que PODEM se tornar vulnerabilidades):
-- Falta de validação em inputs que vêm de usuários
-- Uso de algoritmos de hash fracos (MD5, SHA1) para senhas
-- CORS muito permissivo em APIs públicas
-- Falta de rate limiting em endpoints críticos
-
-**LOW** (sugestões de melhoria preventiva):
-- Headers de segurança ausentes (CSP, X-Frame-Options)
-- Bibliotecas desatualizadas SEM CVE conhecida
-- Logs verbosos que poderiam ser reduzidos
 
 ## ⚖️ SEJA PRAGMÁTICO E CONTEXTUAL:
 

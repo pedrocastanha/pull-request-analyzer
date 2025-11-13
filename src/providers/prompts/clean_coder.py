@@ -141,15 +141,12 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "file": "src/services/order_processor.py",
             "line": 45,
             "final_line": 130,
-            "severity": "medium",
             "type": "Long Method",
             "description": "Método com 85 linhas fazendo múltiplas operações",
             "evidence": "def process_order(self, order):\\n    # 85 linhas de código...",
-            "violated_principle": "Single Responsibility Principle",
             "impact": "Dificulta manutenção, testes e entendimento do código",
             "recommendation": "Extrair validação, cálculo e persistência em métodos separados",
-            "example": "Criar métodos: validate_order(), calculate_totals(), persist_order()",
-            "reference": "Clean Code - Robert Martin"
+            "example": "Criar métodos: validate_order(), calculate_totals(), persist_order()"
         }}}}
     ]
 }}}}
@@ -157,9 +154,8 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 **IMPORTANTE:**
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
-- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
-- Inclua `violated_principle` quando aplicável (SOLID, DRY, KISS)
 - Foque em problemas que realmente afetam manutenibilidade
 
 ## ⚠️ REGRAS IMPORTANTES:
@@ -168,9 +164,8 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 2. **Contexto**: Considere o contexto do projeto (nem tudo precisa ser perfeito)
 3. **Priorize**: Foque em problemas que realmente afetam manutenibilidade
 4. **Evidências**: Mostre exemplos concretos do código
-5. **Princípios**: Cite qual princípio está sendo violado
-6. **Use a tool**: Busque padrões com namespace="clean_code"
-7. **Seja pragmático**: Nem toda duplicação precisa ser removida imediatamente
+5. **Use a tool**: Busque padrões com namespace="clean_code"
+6. **Seja pragmático**: Nem toda duplicação precisa ser removida imediatamente
 
 ## ❌ O QUE NÃO ANALISAR:
 
@@ -188,25 +183,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Acoplamento alto e coesão baixa TÉCNICOS
 - Falta de abstrações ou má organização de CÓDIGO
 
-## 📊 NÍVEIS DE SEVERIDADE:
-
-**HIGH** (apenas code smells que REALMENTE dificultam manutenção):
-- Métodos com >100 linhas fazendo muitas coisas diferentes
-- Classes God Object (>500 linhas, >15 métodos públicos)
-- Duplicação massiva (mesmo código em 5+ lugares)
-- Complexidade ciclomática >15 em método crítico
-- Acoplamento que impede testes ou reuso
-
-**MEDIUM** (violações que PODEM dificultar no futuro):
-- Métodos longos (30-100 linhas) com responsabilidades misturadas
-- Duplicação moderada (mesmo código em 3-4 lugares)
-- Parâmetros demais (>6) sem justificativa clara
-- Nomes vagos em código crítico
-- Falta de abstrações óbvias
-
-**LOW** (sugestões de melhoria sem urgência):
-- Pequenas duplicações que poderiam ser extraídas
-- Nomes que poderiam ser mais descritivos
 - Comentários que poderiam virar código autoexplicativo
 - Oportunidades de aplicar design patterns
 

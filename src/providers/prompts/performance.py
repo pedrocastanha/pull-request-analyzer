@@ -135,15 +135,12 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "file": "src/api/orders.py",
             "line": 78,
             "final_line": 79,
-            "severity": "high",
             "type": "N+1 Query Problem",
             "description": "Loop executando query para cada item, causando 100+ queries",
             "evidence": "for item in items:\\n    product = Product.query.get(item.product_id)",
             "impact": "Tempo de resposta de 5s para 100 items",
-            "complexity": "O(n)",
             "recommendation": "Usar eager loading ou single query com JOIN",
-            "example": "products = Product.query.filter(Product.id.in_(product_ids)).all()",
-            "potential_gain": "Redução de 80% no tempo de resposta"
+            "example": "products = Product.query.filter(Product.id.in_(product_ids)).all()"
         }}}}
     ]
 }}}}
@@ -151,20 +148,16 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 
 **IMPORTANTE:**
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
-- Cada issue DEVE ter `file`, `line`, `severity` (high/medium/low)
+- Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
-- Inclua `complexity` (Big O) quando relevante
-- Estime `potential_gain` quando possível
 
 ## ⚠️ REGRAS IMPORTANTES:
 
 1. **Seja específico**: Sempre indique arquivo, linha e impacto estimado
-2. **Complexidade**: Mencione Big O quando relevante
-3. **Evidências**: Mostre o código problemático
-4. **Soluções práticas**: Dê código alternativo otimizado
-5. **Impacto real**: Estime o ganho de performance (quando possível)
-6. **Use a tool**: Busque benchmarks com namespace="performance"
-7. **Contexto**: Considere o volume de dados esperado
+2. **Evidências**: Mostre o código problemático
+3. **Soluções práticas**: Dê código alternativo otimizado
+4. **Use a tool**: Busque benchmarks com namespace="performance"
+5. **Contexto**: Considere o volume de dados esperado
 
 ## ❌ O QUE NÃO ANALISAR:
 
@@ -181,31 +174,6 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Algoritmos que podem ser otimizados SEM mudar a lógica
 - Operações custosas que podem ser cacheadas
 - Queries que podem usar índices ou eager loading
-
-## 📊 NÍVEIS DE SEVERIDADE:
-
-**CRITICAL** (apenas problemas que COMPROVADAMENTE causam falhas graves):
-- Operações que causam timeout ou crash com dados reais
-- Memory leaks que esgotam recursos
-- Queries que travam o banco em produção
-- Operações síncronas bloqueantes em APIs críticas
-
-**HIGH** (impacto SIGNIFICATIVO com volumes realistas):
-- Problema N+1 com MUITAS queries (>50 em um request)
-- Algoritmos O(n²) ou pior com n GRANDE (>1000 items)
-- Carregamento de arquivos/dados grandes na memória (>100MB)
-- Falta de paginação em endpoints que retornam datasets grandes
-
-**MEDIUM** (otimizações válidas mas não urgentes):
-- Queries que poderiam usar índices
-- Loops aninhados com volumes moderados
-- Falta de cache em operações custosas repetidas
-- Operações que poderiam ser async
-
-**LOW** (sugestões de melhoria sem impacto imediato):
-- Otimizações algorítmicas em código não crítico
-- Melhorias de eficiência sem ganho mensurável
-- Refactorings preventivos
 
 ## 💡 SEJA PRAGMÁTICO E REALISTA:
 
