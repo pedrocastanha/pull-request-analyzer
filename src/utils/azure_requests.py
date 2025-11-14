@@ -1,6 +1,6 @@
 import logging
 import requests
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from difflib import unified_diff
 from src.settings import Settings
 
@@ -276,3 +276,167 @@ class AzureManager:
             "additions": additions,
             "deletions": deletions,
         }
+
+    @staticmethod
+    def create_pr_thread(
+        pr_id: int,
+        file_path: str,
+        line_number: Optional[int] = None,
+        comment_text: str = "",
+    ) -> Optional[Dict]:
+        logger.info(f"Creating comment thread on PR #{pr_id} for file {file_path}")
+
+        try:
+            url = (
+                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/"
+                f"pullRequests/{pr_id}/threads?api-version={Settings.AZURE_API_VERSION}"
+            )
+
+            payload = {
+                "comments": [
+                    {
+                        "content": comment_text,
+                        "commentType": 1
+                    }
+                ],
+                "status": 1,
+            }
+
+            if line_number is not None:
+                payload["threadContext"] = {
+                    "filePath": file_path,
+                    "rightFileStart": {"line": line_number, "offset": 1},
+                    "rightFileEnd": {"line": line_number, "offset": 1000}
+                }
+
+            logger.debug(f"Payload: {payload}")
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+
+            thread_data = response.json()
+            thread_id = thread_data.get("id")
+
+            logger.info(f"✓ Thread #{thread_id} created successfully on PR #{pr_id}")
+            return thread_data
+
+        except requests.exceptions.HTTPError as e:
+            logger.error(
+                f"HTTP error creating thread on PR #{pr_id}: "
+                f"{e.response.status_code} - {e.response.text}"
+            )
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error creating thread: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error creating thread: {str(e)}", exc_info=True)
+            return None
+
+    @staticmethod
+    def add_comment_to_thread(
+        pr_id: int,
+        thread_id: int,
+        comment_text: str,
+        parent_comment_id: Optional[int] = None,
+    ) -> Optional[Dict]:
+        logger.info(f"Adding comment to thread #{thread_id} on PR #{pr_id}")
+
+        try:
+            url = (
+                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/"
+                f"pullRequests/{pr_id}/threads/{thread_id}/comments?"
+                f"api-version={Settings.AZURE_API_VERSION}"
+            )
+
+            payload = {
+                "content": comment_text,
+                "commentType": 1
+            }
+
+            if parent_comment_id is not None:
+                payload["parentCommentId"] = parent_comment_id
+
+            logger.debug(f"Payload: {payload}")
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+
+            comment_data = response.json()
+            comment_id = comment_data.get("id")
+
+            logger.info(
+                f"✓ Comment #{comment_id} added to thread #{thread_id} on PR #{pr_id}"
+            )
+            return comment_data
+
+        except requests.exceptions.HTTPError as e:
+            logger.error(
+                f"HTTP error adding comment to thread #{thread_id}: "
+                f"{e.response.status_code} - {e.response.text}"
+            )
+            return None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Request error adding comment: {str(e)}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error adding comment: {str(e)}", exc_info=True)
+            return None
+
+    @staticmethod
+    def publish_analysis_comments(pr_id: int, analysis_report: Dict) -> Dict[str, Any]:
+        logger.info(f"Publishing analysis comments to PR #{pr_id}")
+
+        stats = {
+            "total_comments": 0,
+            "successful": 0,
+            "failed": 0,
+            "threads_created": [],
+            "errors": []
+        }
+
+        try:
+            for agent_name, agent_data in analysis_report.items():
+                if agent_name.endswith("_analysis") and isinstance(agent_data, dict):
+                    issues = agent_data.get("issues", [])
+
+                    for issue in issues:
+                        stats["total_comments"] += 1
+
+                        file_path = issue.get("file_path", "")
+                        line_number = issue.get("line_number")
+                        severity = issue.get("severity", "info")
+                        message = issue.get("message", "")
+                        suggestion = issue.get("suggestion", "")
+
+                        comment_text = f"**[{agent_name.replace('_analysis', '').upper()}] {severity.upper()}**\n\n"
+                        comment_text += f"{message}\n\n"
+                        if suggestion:
+                            comment_text += f"**Sugestão:**\n{suggestion}"
+
+                        thread_result = AzureManager.create_pr_thread(
+                            pr_id=pr_id,
+                            file_path=file_path,
+                            line_number=line_number,
+                            comment_text=comment_text
+                        )
+
+                        if thread_result:
+                            stats["successful"] += 1
+                            stats["threads_created"].append(thread_result.get("id"))
+                        else:
+                            stats["failed"] += 1
+                            stats["errors"].append({
+                                "file": file_path,
+                                "line": line_number,
+                                "error": "Failed to create thread"
+                            })
+
+            logger.info(
+                f"✓ Published {stats['successful']}/{stats['total_comments']} comments "
+                f"to PR #{pr_id}"
+            )
+
+        except Exception as e:
+            logger.error(f"Error publishing comments: {str(e)}", exc_info=True)
+            stats["errors"].append({"error": str(e)})
+
+        return stats

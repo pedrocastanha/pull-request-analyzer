@@ -11,6 +11,7 @@ class PRAnalysisState(TypedDict):
     logical_analysis: Optional[Dict[str, Any]]
     reviewer_analysis: Optional[Dict[str, Any]]
     final_report: Optional[Dict[str, Any]]
+    publication_stats: Optional[Dict[str, Any]]
     next_node: Optional[str]
     _rag_manager: Optional[Any]
 
@@ -26,6 +27,7 @@ def create_initial_state(pr_id: int) -> PRAnalysisState:
         "logical_analysis": None,
         "reviewer_analysis": None,
         "final_report": None,
+        "publication_stats": None,
         "next_node": None,
         "_rag_manager": None,
     }
