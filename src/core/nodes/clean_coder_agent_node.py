@@ -5,8 +5,11 @@ from src.core import PRAnalysisState
 from src.providers import AgentManager
 from src.providers.tools.shared_tools import search_informations, search_pr_code
 from src.utils.json_parser import parse_llm_json_response
+from src.utils.issue_classifier import IssueClassifier
 
 logger = logging.getLogger(__name__)
+
+_classifier = None
 
 
 async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
@@ -81,6 +84,38 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             f"[NODE: clean_code_analysis] ✓ Analysis complete. "
             f"Found {issues_count} clean code issue(s)"
         )
+
+        if issues_count > 0:
+            try:
+                global _classifier
+                if _classifier is None:
+                    _classifier = IssueClassifier()
+
+                code_context_parts = []
+                for file_change in files[:10]:
+                    code_context_parts.append(
+                        f"File: {file_change['path']}\n"
+                        f"Changes: +{file_change['additions']} -{file_change['deletions']}\n"
+                    )
+                code_context = "\n".join(code_context_parts)
+
+                issues = analysis_result.get("issues", [])
+                classified_issues = _classifier.classify_issues(
+                    agent_type="clean_code",
+                    issues=issues,
+                    code_context=code_context,
+                )
+                analysis_result["issues"] = classified_issues
+
+                problem_count = sum(1 for i in classified_issues if i.get('category') == 'PROBLEM')
+                suggestion_count = sum(1 for i in classified_issues if i.get('category') == 'SUGGESTION')
+                logger.info(
+                    f"[NODE: clean_code_analysis] 🏷️ Classification: "
+                    f"{problem_count} PROBLEM, {suggestion_count} SUGGESTION"
+                )
+
+            except Exception as e:
+                logger.warning(f"[NODE: clean_code_analysis] ⚠️ Classification skipped: {e}")
 
         return {"clean_code_analysis": analysis_result}
 

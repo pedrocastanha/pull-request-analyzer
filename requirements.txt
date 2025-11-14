@@ -3,6 +3,7 @@ uvicorn[standard]
 fastapi
 langchain==0.3.26
 langchain-openai==0.3.27
+langchain-groq
 langchain-core
 requests
 langchain-google-genai
@@ -17,3 +18,4 @@ python-multipart
 langsmith
 langchain_community
 faiss-cpu
+langchain_groq

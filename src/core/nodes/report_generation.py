@@ -53,17 +53,17 @@ def _build_executive_summary(state: HierarchicalPRAnalysisState) -> str:
 
     return f"""## {status_emoji} Executive Summary
 
-**Arquivos analisados:** {total_files}
-**Módulos analisados:** {total_modules}
-**Issues encontrados:** {total_issues}
-
-**Breakdown por Agent:**
-- 🔒 Security: {security_count} issues
-- 🧠 Logical: {logical_count} issues
-- ⚡ Performance: {performance_count} issues
-- 🎨 Clean Code: {clean_code_count} issues
-
-**Status:** {"❌ CRÍTICO - Vulnerabilidades de segurança encontradas" if security_count > 0 else "⚠️ Atenção necessária" if total_issues > 10 else "✅ Sem problemas graves"}"""
+        **Arquivos analisados:** {total_files}
+        **Módulos analisados:** {total_modules}
+        **Issues encontrados:** {total_issues}
+        
+        **Breakdown por Agent:**
+        - 🔒 Security: {security_count} issues
+        - 🧠 Logical: {logical_count} issues
+        - ⚡ Performance: {performance_count} issues
+        - 🎨 Clean Code: {clean_code_count} issues
+        
+        **Status:** {"❌ CRÍTICO - Vulnerabilidades de segurança encontradas" if security_count > 0 else "⚠️ Atenção necessária" if total_issues > 10 else "✅ Sem problemas graves"}"""
 
 
 def _build_module_section(module_analysis) -> str:

@@ -25,12 +25,47 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     pr_id = pr_data["pr_id"]
 
+    def count_issues_by_category(analysis):
+        if not isinstance(analysis, dict) or "issues" not in analysis:
+            return {"total": 0, "problems": 0, "suggestions": 0}
+
+        issues = analysis.get("issues", [])
+        problems = sum(1 for i in issues if i.get("category") == "PROBLEM")
+        suggestions = sum(1 for i in issues if i.get("category") == "SUGGESTION")
+
+        return {
+            "total": len(issues),
+            "problems": problems,
+            "suggestions": suggestions
+        }
+
+    security_counts = count_issues_by_category(security_analysis)
+    performance_counts = count_issues_by_category(performance_analysis)
+    clean_code_counts = count_issues_by_category(clean_code_analysis)
+    logical_counts = count_issues_by_category(logical_analysis)
+
+    total_problems = (
+        security_counts["problems"] +
+        performance_counts["problems"] +
+        clean_code_counts["problems"] +
+        logical_counts["problems"]
+    )
+    total_suggestions = (
+        security_counts["suggestions"] +
+        performance_counts["suggestions"] +
+        clean_code_counts["suggestions"] +
+        logical_counts["suggestions"]
+    )
+
     logger.info(
         f"[NODE: reviewer_analysis] Reviewing PR #{pr_id} - "
-        f"Analyses available: Security={security_analysis is not None}, "
-        f"Performance={performance_analysis is not None}, "
-        f"CleanCode={clean_code_analysis is not None}, "
-        f"Logical={logical_analysis is not None}"
+        f"Security: {security_counts['total']} ({security_counts['problems']}P/{security_counts['suggestions']}S), "
+        f"Performance: {performance_counts['total']} ({performance_counts['problems']}P/{performance_counts['suggestions']}S), "
+        f"CleanCode: {clean_code_counts['total']} ({clean_code_counts['problems']}P/{clean_code_counts['suggestions']}S), "
+        f"Logical: {logical_counts['total']} ({logical_counts['problems']}P/{logical_counts['suggestions']}S)"
+    )
+    logger.info(
+        f"[NODE: reviewer_analysis] 📊 Total: {total_problems} PROBLEMS, {total_suggestions} SUGGESTIONS"
     )
 
     def extract_essential_fields(analysis):
@@ -43,6 +78,7 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
                 "title": issue.get("title"),
                 "description": issue.get("description"),
                 "severity": issue.get("severity"),
+                "category": issue.get("category", "SUGGESTION"),
                 "file": issue.get("file"),
                 "line": issue.get("line"),
                 "impact": issue.get("impact"),
