@@ -284,7 +284,7 @@ class AzureManager:
         line_number: Optional[int] = None,
         comment_text: str = "",
     ) -> Optional[Dict]:
-        logger.info(f"Creating comment thread on PR #{pr_id} for file {file_path}")
+        logger.info(f"Creating comment thread on PR #{pr_id} for file {file_path} at line {line_number}")
 
         try:
             url = (
@@ -303,11 +303,13 @@ class AzureManager:
             }
 
             if line_number is not None:
+                normalized_path = file_path if file_path.startswith("/") else f"/{file_path}"
                 payload["threadContext"] = {
-                    "filePath": file_path,
+                    "filePath": normalized_path,
                     "rightFileStart": {"line": line_number, "offset": 1},
                     "rightFileEnd": {"line": line_number, "offset": 1000}
                 }
+                logger.info(f"Thread context set: filePath={normalized_path}, line={line_number}")
 
             logger.debug(f"Payload: {payload}")
             response = requests.post(url, json=payload, headers=headers)
