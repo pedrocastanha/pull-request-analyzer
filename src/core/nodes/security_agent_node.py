@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from src.core.state import PRAnalysisState
 from src.providers.agents import AgentManager
 from src.providers.tools.shared_tools import search_informations, search_pr_code
-from src.schemas.analysis_schemas import SecurityAnalysis
+from src.schemas import SecurityAnalysis
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.issue_classifier import IssueClassifier
 

@@ -6,7 +6,7 @@ from src.core import PRAnalysisState
 from src.providers import AgentManager
 from src.providers.llms import LLMManager
 from src.providers.prompts_manager import PromptManager
-from src.schemas.analysis_schemas import ReviewerAnalysis
+from src.schemas import ReviewerAnalysis
 from src.utils.json_parser import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
