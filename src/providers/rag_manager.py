@@ -7,6 +7,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
 
 from src.settings import Settings
+from src.utils.diff_parser import DiffParser
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -46,6 +47,12 @@ class RAGManager:
                 logger.debug(f"[RAG] Skipping empty diff for {file_path}")
                 continue
 
+            parsed_diff = DiffParser.parse_diff(diff_text)
+            line_ranges = DiffParser.get_changed_line_ranges(diff_text)
+
+            line_start = line_ranges[0][0] if line_ranges else None
+            line_end = line_ranges[-1][1] if line_ranges else None
+
             doc = Document(
                 page_content=diff_text,
                 metadata={
@@ -56,6 +63,9 @@ class RAGManager:
                     "extension": (
                         file_path.split(".")[-1] if "." in file_path else "unknown"
                     ),
+                    "line_start": line_start,
+                    "line_end": line_end,
+                    "total_chunks": parsed_diff["total_chunks"],
                 },
             )
             documents.append(doc)
@@ -136,7 +146,17 @@ class RAGManager:
 
             for i, doc in enumerate(docs, 1):
                 file_path = doc.metadata.get("file", "unknown")
-                result_parts.append(f"\n[{i}] {file_path}")
+                line_start = doc.metadata.get("line_start")
+                line_end = doc.metadata.get("line_end")
+
+                location = f"{file_path}"
+                if line_start:
+                    if line_end and line_end != line_start:
+                        location += f" (lines {line_start}-{line_end})"
+                    else:
+                        location += f" (line {line_start})"
+
+                result_parts.append(f"\n[{i}] {location}")
                 result_parts.append(doc.page_content)
 
             formatted_result = "\n".join(result_parts)

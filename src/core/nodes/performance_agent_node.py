@@ -90,6 +90,9 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             logger.warning(f"[NODE: performance_analysis] Validation error, using fallback: {e}")
             analysis_result = PerformanceAnalysis(issues=[], summary="Validation failed")
 
+        for issue in analysis_result.issues:
+            issue.agent_type = "Performance"
+
         issues_count = len(analysis_result.issues)
         logger.info(
             f"[NODE: performance_analysis] ✓ Analysis complete. "

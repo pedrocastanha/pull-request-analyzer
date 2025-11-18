@@ -1,4 +1,4 @@
-from .shared_guidelines import TONE_GUIDELINES
+from .shared_guidelines import PRIORITY_GUIDELINES
 
 
 class Performance:
@@ -32,12 +32,15 @@ search_pr_code(
 ```
 
 **COMO USAR NA PRÁTICA:**
-1. **PRIMEIRO**: Faça queries para encontrar gargalos:
-   - `search_pr_code("loops aninhados iterações for while")`
-   - `search_pr_code("queries SQL banco de dados")`
-   - `search_pr_code("operações I/O arquivo read write")`
-   - `search_pr_code("chamadas API requests HTTP")`
-   - `search_pr_code("operações assíncronas async await")`
+
+1. **PRIMEIRO**: Faça queries para encontrar gargalos (FORMATO CORRETO):
+   ```json
+   search_pr_code(query="loops aninhados iterações for while", top_k=5, filter_extension="java")
+   search_pr_code(query="queries SQL banco de dados", top_k=5, filter_extension="java")
+   search_pr_code(query="operações I/O arquivo read write", top_k=5, filter_extension="java")
+   search_pr_code(query="chamadas API requests HTTP", top_k=5, filter_extension="java")
+   search_pr_code(query="operações assíncronas async await", top_k=5, filter_extension="java")
+   ```
 
 2. **ANALISE** os trechos retornados
 
@@ -46,6 +49,7 @@ search_pr_code(
 **IMPORTANTE:**
 - Faça MÚLTIPLAS queries específicas
 - NÃO tente analisar sem buscar o código primeiro
+- Use SEMPRE o formato: `query="texto"` (não use `query=` sem aspas!)
 
 ---
 
@@ -222,5 +226,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 Seja um parceiro técnico pragmático, não um otimizador teórico. Reporte apenas o que tem impacto REAL.
 
 """
-        + TONE_GUIDELINES
+        + PRIORITY_GUIDELINES
     )

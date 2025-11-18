@@ -1,4 +1,4 @@
-from .shared_guidelines import TONE_GUIDELINES
+from .shared_guidelines import PRIORITY_GUIDELINES
 
 
 class Security:
@@ -211,5 +211,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 Seja um parceiro do time, não um bloqueador. Reporte apenas o que REALMENTE importa.
 
 """
-        + TONE_GUIDELINES
+        + PRIORITY_GUIDELINES
     )

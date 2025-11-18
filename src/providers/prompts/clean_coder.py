@@ -1,4 +1,4 @@
-from .shared_guidelines import TONE_GUIDELINES
+from .shared_guidelines import PRIORITY_GUIDELINES
 
 
 class CleanCoder:
@@ -247,5 +247,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 Seja um parceiro pragmático, não um purista. Aponte apenas problemas que valem o esforço de refatorar.
 
 """
-        + TONE_GUIDELINES
+        + PRIORITY_GUIDELINES
     )

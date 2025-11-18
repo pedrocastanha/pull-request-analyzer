@@ -28,47 +28,66 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     pr_id = pr_data["pr_id"]
 
-    def count_issues_by_category(analysis):
+    def count_issues_by_priority(analysis):
         if not isinstance(analysis, dict) or "issues" not in analysis:
-            return {"total": 0, "problems": 0, "suggestions": 0}
+            return {"total": 0, "critica": 0, "alta": 0, "media": 0, "baixa": 0}
 
         issues = analysis.get("issues", [])
-        problems = sum(1 for i in issues if i.get("category") == "PROBLEM")
-        suggestions = sum(1 for i in issues if i.get("category") == "SUGGESTION")
+        critica = sum(1 for i in issues if i.get("priority") == "Crítica")
+        alta = sum(1 for i in issues if i.get("priority") == "Alta")
+        media = sum(1 for i in issues if i.get("priority") == "Média")
+        baixa = sum(1 for i in issues if i.get("priority") == "Baixa")
 
         return {
             "total": len(issues),
-            "problems": problems,
-            "suggestions": suggestions
+            "critica": critica,
+            "alta": alta,
+            "media": media,
+            "baixa": baixa
         }
 
-    security_counts = count_issues_by_category(security_analysis)
-    performance_counts = count_issues_by_category(performance_analysis)
-    clean_code_counts = count_issues_by_category(clean_code_analysis)
-    logical_counts = count_issues_by_category(logical_analysis)
+    security_counts = count_issues_by_priority(security_analysis)
+    performance_counts = count_issues_by_priority(performance_analysis)
+    clean_code_counts = count_issues_by_priority(clean_code_analysis)
+    logical_counts = count_issues_by_priority(logical_analysis)
 
-    total_problems = (
-        security_counts["problems"] +
-        performance_counts["problems"] +
-        clean_code_counts["problems"] +
-        logical_counts["problems"]
+    total_critica = (
+        security_counts["critica"] +
+        performance_counts["critica"] +
+        clean_code_counts["critica"] +
+        logical_counts["critica"]
     )
-    total_suggestions = (
-        security_counts["suggestions"] +
-        performance_counts["suggestions"] +
-        clean_code_counts["suggestions"] +
-        logical_counts["suggestions"]
+    total_alta = (
+        security_counts["alta"] +
+        performance_counts["alta"] +
+        clean_code_counts["alta"] +
+        logical_counts["alta"]
+    )
+    total_media = (
+        security_counts["media"] +
+        performance_counts["media"] +
+        clean_code_counts["media"] +
+        logical_counts["media"]
+    )
+    total_baixa = (
+        security_counts["baixa"] +
+        performance_counts["baixa"] +
+        clean_code_counts["baixa"] +
+        logical_counts["baixa"]
     )
 
     logger.info(
         f"[NODE: reviewer_analysis] Reviewing PR #{pr_id} - "
-        f"Security: {security_counts['total']} ({security_counts['problems']}P/{security_counts['suggestions']}S), "
-        f"Performance: {performance_counts['total']} ({performance_counts['problems']}P/{performance_counts['suggestions']}S), "
-        f"CleanCode: {clean_code_counts['total']} ({clean_code_counts['problems']}P/{clean_code_counts['suggestions']}S), "
-        f"Logical: {logical_counts['total']} ({logical_counts['problems']}P/{logical_counts['suggestions']}S)"
+        f"Security: {security_counts['total']}, "
+        f"Performance: {performance_counts['total']}, "
+        f"CleanCode: {clean_code_counts['total']}, "
+        f"Logical: {logical_counts['total']}"
     )
     logger.info(
-        f"[NODE: reviewer_analysis] 📊 Total: {total_problems} PROBLEMS, {total_suggestions} SUGGESTIONS"
+        f"Crítica={total_critica} | "
+        f"Alta={total_alta} | "
+        f"Média={total_media} | "
+        f"Baixa={total_baixa}"
     )
 
     def extract_essential_fields(analysis):
@@ -80,12 +99,14 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             essential_issues.append({
                 "title": issue.get("title"),
                 "description": issue.get("description"),
-                "severity": issue.get("severity"),
-                "category": issue.get("category", "SUGGESTION"),
+                "priority": issue.get("priority", "Baixa"),
+                "agent_type": issue.get("agent_type", "Unknown"),
                 "file": issue.get("file"),
                 "line": issue.get("line"),
+                "final_line": issue.get("final_line"),
                 "impact": issue.get("impact"),
                 "evidence": issue.get("evidence"),
+                "recommendation": issue.get("recommendation"),
                 "example": issue.get("example")
             })
 

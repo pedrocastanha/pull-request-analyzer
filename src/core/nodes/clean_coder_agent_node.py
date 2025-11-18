@@ -83,6 +83,9 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
             logger.warning(f"[NODE: clean_code_analysis] Validation error, using fallback: {e}")
             analysis_result = CleanCodeAnalysis(issues=[], summary="Validation failed")
 
+        for issue in analysis_result.issues:
+            issue.agent_type = "CleanCoder"
+
         issues_count = len(analysis_result.issues)
         logger.info(
             f"[NODE: clean_code_analysis] ✓ Analysis complete. "

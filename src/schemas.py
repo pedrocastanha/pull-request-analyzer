@@ -12,7 +12,8 @@ class IssueBase(BaseModel):
     impact: Optional[str] = Field(None, description="Impact and consequences of this issue")
     recommendation: Optional[str] = Field(None, description="How to fix this issue")
     example: Optional[str] = Field(None, description="Example of corrected code")
-    category: Optional[str] = Field(None, description="PROBLEM or SUGGESTION")
+    priority: Optional[str] = Field(None, description="Priority level: Baixa, Média, Alta, Crítica")
+    agent_type: Optional[str] = Field(None, description="Agent that found this issue: Security, Performance, CleanCode, Logical")
     severity: Optional[str] = Field(None, description="Issue severity level")
     title: Optional[str] = Field(None, description="Short title of the issue")
 
@@ -41,6 +42,8 @@ class ReviewerComment(BaseModel):
     file: str = Field(description="File path")
     line: int = Field(description="Line number")
     final_line: Optional[int] = Field(None, description="Final line if spans multiple lines")
+    priority: str = Field(description="Priority: Crítica, Alta, Média, Baixa")
+    agent_type: str = Field(description="Agent type: Security, Performance, CleanCode, Logical")
     message: str = Field(description="Complete formatted message for Azure DevOps")
 
 

@@ -1,4 +1,4 @@
-from .shared_guidelines import TONE_GUIDELINES
+from .shared_guidelines import PRIORITY_GUIDELINES
 
 
 class Logical:
@@ -264,5 +264,5 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 Seja um QA pragmático, não um paranoico. Aponte apenas bugs que valem ser corrigidos.
 
 """
-        + TONE_GUIDELINES
+        + PRIORITY_GUIDELINES
     )

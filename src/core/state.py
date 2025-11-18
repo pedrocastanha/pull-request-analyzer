@@ -10,6 +10,7 @@ class PRAnalysisState(TypedDict):
     clean_code_analysis: Optional[Dict[str, Any]]
     logical_analysis: Optional[Dict[str, Any]]
     reviewer_analysis: Optional[Dict[str, Any]]
+    final_comments: Optional[List[Dict[str, Any]]]
     final_report: Optional[Dict[str, Any]]
     publication_stats: Optional[Dict[str, Any]]
     next_node: Optional[str]
@@ -26,6 +27,7 @@ def create_initial_state(pr_id: int) -> PRAnalysisState:
         "clean_code_analysis": None,
         "logical_analysis": None,
         "reviewer_analysis": None,
+        "final_comments": None,
         "final_report": None,
         "publication_stats": None,
         "next_node": None,
