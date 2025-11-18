@@ -382,7 +382,7 @@ class AzureManager:
             return None
 
     @staticmethod
-    def publish_analysis_comments(pr_id: int, analysis_report: Dict) -> Dict[str, Any]:
+    def publish_analysis_comments(pr_id: int, comments: List[Dict]) -> Dict[str, Any]:
         logger.info(f"Publishing analysis comments to PR #{pr_id}")
 
         stats = {
@@ -394,41 +394,30 @@ class AzureManager:
         }
 
         try:
-            for agent_name, agent_data in analysis_report.items():
-                if agent_name.endswith("_analysis") and isinstance(agent_data, dict):
-                    issues = agent_data.get("issues", [])
+            for comment in comments:
+                stats["total_comments"] += 1
 
-                    for issue in issues:
-                        stats["total_comments"] += 1
+                file_path = comment.get("file", "")
+                line_number = comment.get("line")
+                message = comment.get("message", "")
 
-                        file_path = issue.get("file_path", "")
-                        line_number = issue.get("line_number")
-                        severity = issue.get("severity", "info")
-                        message = issue.get("message", "")
-                        suggestion = issue.get("suggestion", "")
+                thread_result = AzureManager.create_pr_thread(
+                    pr_id=pr_id,
+                    file_path=file_path,
+                    line_number=line_number,
+                    comment_text=message
+                )
 
-                        comment_text = f"**[{agent_name.replace('_analysis', '').upper()}] {severity.upper()}**\n\n"
-                        comment_text += f"{message}\n\n"
-                        if suggestion:
-                            comment_text += f"**Sugestão:**\n{suggestion}"
-
-                        thread_result = AzureManager.create_pr_thread(
-                            pr_id=pr_id,
-                            file_path=file_path,
-                            line_number=line_number,
-                            comment_text=comment_text
-                        )
-
-                        if thread_result:
-                            stats["successful"] += 1
-                            stats["threads_created"].append(thread_result.get("id"))
-                        else:
-                            stats["failed"] += 1
-                            stats["errors"].append({
-                                "file": file_path,
-                                "line": line_number,
-                                "error": "Failed to create thread"
-                            })
+                if thread_result:
+                    stats["successful"] += 1
+                    stats["threads_created"].append(thread_result.get("id"))
+                else:
+                    stats["failed"] += 1
+                    stats["errors"].append({
+                        "file": file_path,
+                        "line": line_number,
+                        "error": "Failed to create thread"
+                    })
 
             logger.info(
                 f"✓ Published {stats['successful']}/{stats['total_comments']} comments "
