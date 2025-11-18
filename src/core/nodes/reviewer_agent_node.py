@@ -4,6 +4,9 @@ from typing import Dict, Any
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
+from src.providers.llms import LLMManager
+from src.providers.prompts_manager import PromptManager
+from src.schemas.analysis_schemas import ReviewerAnalysis
 from src.utils.json_parser import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
@@ -133,38 +136,19 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     context = "\n".join(context_parts)
 
     try:
-        callback = AgentManager.get_callback(verbose=True)
+        prompt = PromptManager.get_agent_prompt("Reviewer")
+        structured_llm = LLMManager.get_structured_llm("gpt-4o-mini", ReviewerAnalysis)
 
-        agent = AgentManager.get_agents(tools=[], agent_name="Reviewer")
+        chain = prompt | structured_llm
 
-        response = await agent.ainvoke(
-            {"context": context}, config={"callbacks": [callback]}
-        )
+        analysis_result: ReviewerAnalysis = await chain.ainvoke({"context": context})
 
-        callback.print_summary()
-
-        if isinstance(response, dict) and "output" in response:
-            analysis_text = response["output"]
-        elif hasattr(response, "content"):
-            if isinstance(response.content, list):
-                analysis_text = str(response.content)
-            else:
-                analysis_text = response.content
-        else:
-            analysis_text = str(response)
-
-        analysis_result = parse_llm_json_response(analysis_text)
-
-        comments_count = (
-            len(analysis_result.get("comments", []))
-            if isinstance(analysis_result.get("comments"), list)
-            else 0
-        )
+        comments_count = len(analysis_result.comments)
         logger.info(
             f"[NODE: reviewer_analysis] ✓ Generated {comments_count} comment(s)"
         )
 
-        return {"reviewer_analysis": analysis_result}
+        return {"reviewer_analysis": analysis_result.model_dump()}
 
     except Exception as e:
         error_msg = f"Error during reviewer analysis: {str(e)}"

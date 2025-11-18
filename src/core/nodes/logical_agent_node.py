@@ -1,9 +1,11 @@
 import logging
 from typing import Dict, Any
+from pydantic import ValidationError
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
 from src.providers.tools.shared_tools import search_informations, search_pr_code
+from src.schemas.analysis_schemas import LogicalAnalysis
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.issue_classifier import IssueClassifier
 
@@ -73,13 +75,15 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         else:
             analysis_text = str(response)
 
-        analysis_result = parse_llm_json_response(analysis_text)
+        parsed_data = parse_llm_json_response(analysis_text)
 
-        issues_count = (
-            len(analysis_result.get("issues", []))
-            if isinstance(analysis_result.get("issues"), list)
-            else 0
-        )
+        try:
+            analysis_result = LogicalAnalysis(**parsed_data)
+        except ValidationError as e:
+            logger.warning(f"[NODE: logical_analysis] Validation error, using fallback: {e}")
+            analysis_result = LogicalAnalysis(issues=[], summary="Validation failed")
+
+        issues_count = len(analysis_result.issues)
         logger.info(
             f"[NODE: logical_analysis] ✓ Analysis complete. "
             f"Found {issues_count} logical issue(s)"
@@ -99,13 +103,12 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
                     )
                 code_context = "\n".join(code_context_parts)
 
-                issues = analysis_result.get("issues", [])
+                issues_dict = [issue.model_dump() if hasattr(issue, 'model_dump') else issue for issue in analysis_result.issues]
                 classified_issues = _classifier.classify_issues(
                     agent_type="logical",
-                    issues=issues,
+                    issues=issues_dict,
                     code_context=code_context,
                 )
-                analysis_result["issues"] = classified_issues
 
                 problem_count = sum(1 for i in classified_issues if i.get('category') == 'PROBLEM')
                 suggestion_count = sum(1 for i in classified_issues if i.get('category') == 'SUGGESTION')
@@ -114,10 +117,12 @@ async def logical_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
                     f"{problem_count} PROBLEM, {suggestion_count} SUGGESTION"
                 )
 
+                return {"logical_analysis": {"issues": classified_issues, "summary": analysis_result.summary}}
+
             except Exception as e:
                 logger.warning(f"[NODE: logical_analysis] ⚠️ Classification skipped: {e}")
 
-        return {"logical_analysis": analysis_result}
+        return {"logical_analysis": analysis_result.model_dump()}
     except Exception as e:
         error_msg = f"Error during logical analysis: {str(e)}"
         logger.error(f"[NODE: logical_analysis] {error_msg}")
