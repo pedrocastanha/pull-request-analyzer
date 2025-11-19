@@ -41,6 +41,8 @@ search_pr_code(
 - `search_pr_code("None null undefined validação")`
 - `search_pr_code("estado compartilhado lock thread")`
 
+**ATENÇÃO:** A ferramenta retorna o resultado com números de linha. **USE ESSES NÚMEROS** no campo `line` do issue!
+
 ---
 
 ### PASSO 2: Validar e Aprofundar com `search_knowledge`
@@ -68,57 +70,45 @@ search_knowledge(
 
 ## 📋 O QUE ANALISAR:
 
-### 1. **Edge Cases & Boundary Conditions**
-- Divisão por zero
-- Arrays/listas vazias
-- Valores None/null não tratados
-- Strings vazias
-- Números negativos onde só positivos são esperados
-- Overflow/underflow numérico
-- Índices fora do range
+### 1. **Tratamento de Exceções (JAVA)**
+- Capture exceções específicas (DataAccessException, JsonProcessingException)
+- NUNCA catch (Exception) genérico
+- Crie exceções customizadas de domínio (UserNotFoundException, etc.)
+- Mapeie para códigos HTTP via @ControllerAdvice
+- Propague com contexto: throw new BusinessException("msg", e)
+- Preserve causa original
 
-### 2. **Lógica Condicional**
+### 2. **Transações (@Transactional)**
+- Apenas em métodos públicos que alteram banco
+- readOnly = true para consultas
+- Escopo mínimo (não em helpers/privados)
+- Propagation explícita quando necessário
+- Rollback automático em exceptions
+
+### 3. **Testes**
+- Cobertura mínima 80% em serviços críticos
+- Testes unitários com mocks (@MockBean, Mockito)
+- Testes de integração com MockMvc e H2
+- Validação de rotas REST e DTOs
+
+### 4. **Edge Cases & Boundary Conditions**
+- Divisão por zero (BigDecimal.ZERO)
+- Arrays/listas vazias
+- Valores null não tratados (Objects.isNull/nonNull)
+- Strings vazias
+- Overflow/underflow numérico
+
+### 5. **Lógica Condicional**
 - Condições sempre verdadeiras/falsas (dead code)
 - Operadores lógicos incorretos (AND vs OR)
 - Negação dupla desnecessária
-- Short-circuit não considerado
-- Precedência de operadores incorreta
 - Condições redundantes
 
-### 3. **Loops & Iteração**
+### 6. **Loops & Iteração**
 - Loop infinito potencial
 - Off-by-one errors
 - Condição de parada incorreta
 - Modificação da coleção durante iteração
-- Break/continue em local errado
-
-### 4. **State Management**
-- Mutação de estado não intencional
-- Estado compartilhado sem sincronização
-- Race conditions
-- Variáveis não inicializadas
-- Estado inconsistente após exceção
-
-### 5. **Error Handling**
-- Try-catch muito amplo (catching Exception)
-- Exceções silenciadas sem logging
-- Finally blocks ausentes
-- Resource leaks (arquivos não fechados)
-- Erro retornado ao invés de lançado
-
-### 6. **Type & Data Validation**
-- Type mismatches
-- Conversões implícitas perigosas
-- Validação de input ausente
-- Sanitização inadequada
-- Comparação de tipos incompatíveis
-
-### 7. **Async & Concurrency**
-- Await faltando em chamada async
-- Race conditions
-- Deadlock potencial
-- Shared state sem locks
-- Callbacks não aguardados
 
 ## 📤 FORMATO DE RESPOSTA:
 
@@ -146,6 +136,9 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- **LINHA EXATA OBRIGATÓRIA**: Indique a linha REAL onde o problema ocorre
+- **NUNCA use `line: 1`** a menos que o problema esteja realmente na linha 1
+- Use `search_pr_code` para encontrar o trecho exato e sua linha
 - Explique o `impact` concreto (crash, dados errados, etc.)
 - No campo `example`, use código GENÉRICO + aviso de adaptação
 
@@ -174,9 +167,9 @@ try /* operação */ catch (Exception e) /* logger + throw */
 
 ## ⚠️ REGRAS IMPORTANTES:
 
-1. **Seja específico**: Indique exatamente qual cenário causa o bug
+1. **Linha exata**: SEMPRE indique a linha REAL do problema (busque no código)
 2. **Impacto**: Explique o que acontece quando o bug é atingido
-3. **Evidências**: Mostre o código problemático
+3. **Evidências**: Mostre o código problemático COM número de linha correto
 4. **Soluções**: Dê código corrigido
 5. **Use a tool**: Busque contexto com namespace="logical"
 6. **Teste mental**: Execute o código mentalmente com diferentes inputs

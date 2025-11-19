@@ -41,6 +41,8 @@ search_pr_code(
 - `search_pr_code(query="async await thread lock")`
 - `search_pr_code(query="memory stream")`
 
+**ATENÇÃO:** A ferramenta retorna o resultado com números de linha. **USE ESSES NÚMEROS** no campo `line` do issue!
+
 ---
 
 ### PASSO 2: Validar e Aprofundar com `search_knowledge`
@@ -68,41 +70,35 @@ search_knowledge(
 
 ## 📋 O QUE ANALISAR:
 
-### 1. **Algoritmos & Complexidade**
-- Loops aninhados desnecessários (O(n²) ou pior)
-- Algoritmos ineficientes (bubble sort vs quicksort)
-- Operações redundantes
-- Recursão sem memoization
+### 1. **Performance de Acesso a Dados (JAVA)**
+- Problema N+1: usar @EntityGraph ou JOIN FETCH
+- Paginação obrigatória com Pageable em endpoints que retornam coleções
+- Limite máximo de itens por página (ex: 100)
+- Batching com batch size no Hibernate
+- Flush/clear periódico em operações massivas
+- Projeções DTO ao invés de carregar entidades completas
 
-### 2. **Database & Queries**
-- Problema N+1 (múltiplas queries em loop)
+### 2. **Thread-Safety**
+- java.time (LocalDateTime, DateTimeFormatter) ao invés de SimpleDateFormat
+- Evitar coleções estáticas mutáveis
+- Evitar campos de instância não thread-safe em beans singleton
+- Objetos imutáveis sempre que possível
+
+### 3. **Database & Queries**
 - Queries sem índices
 - SELECT * desnecessário
-- Falta de paginação em grandes datasets
 - Transactions longas
 
-### 3. **Memory Management**
+### 4. **Memory Management**
 - Memory leaks (objetos não liberados)
 - Carregamento excessivo de dados na memória
 - Falta de streaming para arquivos grandes
 - Cache excessivo sem invalidação
 
-### 4. **I/O Operations**
-- Operações síncronas que poderiam ser async
-- Reads/writes repetidos desnecessários
-- Falta de buffering
-- Arquivos grandes carregados por completo
-
-### 5. **Network & API**
-- Chamadas API em loops
-- Falta de rate limiting
-- Payloads grandes sem compressão
-- Múltiplas requisições que poderiam ser batched
-
-### 6. **Concurrency & Parallelism**
-- Operações que poderiam ser paralelas
-- Thread blocking desnecessário
-- Falta de uso de async/await
+### 5. **Algoritmos & Complexidade**
+- Loops aninhados desnecessários (O(n²) ou pior)
+- Algoritmos ineficientes
+- Operações redundantes
 
 ## 📤 FORMATO DE RESPOSTA:
 
@@ -130,11 +126,14 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
+- **LINHA EXATA OBRIGATÓRIA**: Indique a linha REAL onde o problema ocorre
+- **NUNCA use `line: 1`** a menos que o problema esteja realmente na linha 1
+- Use `search_pr_code` para encontrar o trecho exato e sua linha
 
 ## ⚠️ REGRAS IMPORTANTES:
 
-1. **Seja específico**: Sempre indique arquivo, linha e impacto estimado
-2. **Evidências**: Mostre o código problemático
+1. **Linha exata**: SEMPRE indique a linha REAL do problema (busque no código)
+2. **Evidências**: Mostre o código problemático COM número de linha correto
 3. **Soluções práticas**: Dê código alternativo otimizado
 4. **Use a tool**: Busque benchmarks com namespace="performance"
 5. **Contexto**: Considere o volume de dados esperado
