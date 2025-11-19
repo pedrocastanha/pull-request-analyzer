@@ -10,7 +10,7 @@ from src.core.nodes.performance_agent_node import performance_analysis_node
 from src.core.nodes.reviewer_agent_node import reviewer_analysis_node
 from src.core.nodes.security_agent_node import security_analysis_node
 from src.core.nodes.setup_rag_node import setup_rag_node
-from src.core.nodes.debate_node import debate_node
+from src.core.nodes.aggregate_analyses_node import aggregate_analyses_node
 from src.core.nodes.publish_comments_node import publish_comments_node
 from src.core.nodes.cleanup_node import cleanup_resources_node
 from src.core.router import should_continue_or_end
@@ -25,8 +25,8 @@ workflow.add_node("security_agent", security_analysis_node)
 workflow.add_node("performance_agent", performance_analysis_node)
 workflow.add_node("clean_coder_agent", clean_coder_analysis_node)
 workflow.add_node("logical_agent", logical_analysis_node)
+workflow.add_node("aggregate_analyses", aggregate_analyses_node)
 workflow.add_node("reviewer_agent", reviewer_analysis_node)
-workflow.add_node("debate", debate_node)
 workflow.add_node("publish_comments", publish_comments_node)
 workflow.add_node("cleanup", cleanup_resources_node)
 
@@ -39,12 +39,17 @@ workflow.add_conditional_edges(
 )
 
 workflow.add_edge("setup_rag", "security_agent")
-workflow.add_edge("security_agent", "performance_agent")
-workflow.add_edge("performance_agent", "clean_coder_agent")
-workflow.add_edge("clean_coder_agent", "logical_agent")
-workflow.add_edge("logical_agent", "reviewer_agent")
-workflow.add_edge("reviewer_agent", "debate")
-workflow.add_edge("debate", "publish_comments")
+workflow.add_edge("setup_rag", "performance_agent")
+workflow.add_edge("setup_rag", "clean_coder_agent")
+workflow.add_edge("setup_rag", "logical_agent")
+
+workflow.add_edge("security_agent", "aggregate_analyses")
+workflow.add_edge("performance_agent", "aggregate_analyses")
+workflow.add_edge("clean_coder_agent", "aggregate_analyses")
+workflow.add_edge("logical_agent", "aggregate_analyses")
+
+workflow.add_edge("aggregate_analyses", "reviewer_agent")
+workflow.add_edge("reviewer_agent", "publish_comments")
 workflow.add_edge("publish_comments", "cleanup")
 workflow.add_edge("cleanup", END)
 

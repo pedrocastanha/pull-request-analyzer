@@ -1,4 +1,5 @@
 import logging
+import os
 from contextvars import ContextVar
 from functools import lru_cache
 from typing import Optional
@@ -179,3 +180,72 @@ def search_knowledge(query: str, namespace: str) -> str:
     except Exception as e:
         logger.error(f"[TOOL: search_informations] Error searching: {e}")
         return f"Erro ao buscar informações: {str(e)}"
+
+
+def _search_file_content_impl(file_path: str, line_number: int, context_lines: int = 5) -> str:
+    """
+    Reads a specified file and extracts content around a given line number.
+
+    Args:
+        file_path: The path to the file to read.
+        line_number: The 1-based line number around which to extract content.
+        context_lines: The number of lines to include before and after the target line.
+
+    Returns:
+        A string containing the extracted code snippet with line numbers,
+        or an error message if the file cannot be read or the line number is invalid.
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"❌ Erro: Arquivo não encontrado: {file_path}"
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+
+        # Adjust line_number to be 0-based for list indexing
+        actual_line_index = line_number - 1
+
+        if not (0 <= actual_line_index < len(lines)):
+            return f"❌ Erro: Número de linha inválido ({line_number}) para o arquivo {file_path}. O arquivo tem {len(lines)} linhas."
+
+        start_line = max(0, actual_line_index - context_lines)
+        end_line = min(len(lines), actual_line_index + context_lines + 1)
+
+        snippet = []
+        for i in range(start_line, end_line):
+            snippet.append(f"{i + 1:4d}| {lines[i].rstrip()}") # Add 1 to i for 1-based line numbering
+
+        return (
+            f"Conteúdo do arquivo {file_path} em torno da linha {line_number}:\n"
+            f"```\n"
+            f"{ '\n'.join(snippet)}\n"
+            f"```"
+        )
+
+    except Exception as e:
+        logger.error(f"[TOOL: search_file_content] Error reading file {file_path}: {e}")
+        return f"❌ Erro ao ler o arquivo {file_path}: {str(e)}"
+
+@tool
+def search_file_content_tool(file_path: str, line_number: int, context_lines: int = 5) -> str:
+    """
+    🔍 Busca o conteúdo de um arquivo em torno de um número de linha específico.
+
+    QUANDO USAR:
+    - Para obter o contexto exato do código ao validar um comentário.
+    - Para verificar se uma correção ou problema apontado pelo Reviewer Agent realmente existe.
+
+    Args:
+        file_path: O caminho completo ou relativo para o arquivo.
+        line_number: O número da linha (1-baseado) para focar a busca.
+        context_lines: Opcional. Número de linhas a serem incluídas antes e depois da linha principal. Padrão é 5.
+
+    Returns:
+        Um snippet do código com números de linha, incluindo o contexto,
+        ou uma mensagem de erro se o arquivo não for encontrado ou a linha for inválida.
+
+    Exemplos de uso:
+        search_file_content_tool("src/service/UserService.java", 123)
+        search_file_content_tool("config/app.py", 45, context_lines=3)
+    """
+    return _search_file_content_impl(file_path, line_number, context_lines)
