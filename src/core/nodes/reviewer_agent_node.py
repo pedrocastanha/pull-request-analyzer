@@ -158,7 +158,7 @@ async def reviewer_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     try:
         prompt = PromptManager.get_agent_prompt("Reviewer")
-        structured_llm = LLMManager.get_structured_llm("gpt-4o-mini", ReviewerAnalysis)
+        structured_llm = LLMManager.get_structured_llm("gpt-4.1-mini", ReviewerAnalysis)
 
         chain = prompt | structured_llm
 
