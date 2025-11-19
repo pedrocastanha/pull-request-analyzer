@@ -21,6 +21,21 @@ async def debate_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     initial_comments = reviewer_analysis.get("comments", [])
     logger.info(f"[NODE: debate] Starting with {len(initial_comments)} comments from Reviewer")
+
+    # Log dos comentários iniciais
+    logger.info("[NODE: debate] === INITIAL COMMENTS FROM REVIEWER ===")
+    for i, comment in enumerate(initial_comments, 1):
+        logger.info(f"[NODE: debate] Comment #{i}:")
+        logger.info(f"  File: {comment.get('file', 'N/A')}")
+        logger.info(f"  Line: {comment.get('line', 'N/A')}")
+        logger.info(f"  Priority: {comment.get('priority', 'N/A')}")
+        logger.info(f"  Agent: {comment.get('agent_type', 'N/A')}")
+        msg = comment.get('message', '')
+        if len(msg) > 300:
+            logger.info(f"  Message: {msg[:300]}...")
+        else:
+            logger.info(f"  Message: {msg}")
+
     logger.info("[NODE: debate] === ROUND 2: Validator analyzing comments ===")
 
     validator_prompt = ChatPromptTemplate.from_messages([
@@ -51,7 +66,7 @@ Retorne JSON no formato:
 """)
     ])
 
-    validator_llm = LLMManager.get_llm("gpt-4o-mini")
+    validator_llm = LLMManager.get_llm("gpt-4.1-mini")
 
     import json
     comments_json = json.dumps(initial_comments, indent=2)
@@ -64,13 +79,38 @@ Retorne JSON no formato:
         validator_content = validator_response.content if hasattr(validator_response, 'content') else str(validator_response)
         validator_feedback = parse_llm_json_response(validator_content)
 
-        approved_count = len(validator_feedback.get("feedback", {}).get("approved_comments", []))
-        rejected_count = len(validator_feedback.get("feedback", {}).get("rejected_comments", []))
+        approved_comments = validator_feedback.get("feedback", {}).get("approved_comments", [])
+        rejected_comments = validator_feedback.get("feedback", {}).get("rejected_comments", [])
+        suggestions = validator_feedback.get("feedback", {}).get("suggestions_for_reviewer", [])
+
+        approved_count = len(approved_comments)
+        rejected_count = len(rejected_comments)
 
         logger.info(f"[NODE: debate] Validator Round 2: Approved={approved_count}, Rejected={rejected_count}")
 
+        # Log detalhado dos comentários rejeitados
+        if rejected_count > 0:
+            logger.info(f"[NODE: debate] === REJECTED COMMENTS DETAILS ===")
+            for i, rejected in enumerate(rejected_comments, 1):
+                logger.info(f"[NODE: debate] Rejected #{i}:")
+                logger.info(f"  File: {rejected.get('file', 'N/A')}")
+                logger.info(f"  Line: {rejected.get('line', 'N/A')}")
+                logger.info(f"  Reason: {rejected.get('reason', 'N/A')}")
+                original_msg = rejected.get('original_message', '')
+                if len(original_msg) > 200:
+                    logger.info(f"  Original: {original_msg[:200]}...")
+                else:
+                    logger.info(f"  Original: {original_msg}")
+
+        # Log das sugestões
+        if suggestions:
+            logger.info(f"[NODE: debate] === VALIDATOR SUGGESTIONS ===")
+            for i, suggestion in enumerate(suggestions, 1):
+                logger.info(f"[NODE: debate] Suggestion #{i}: {suggestion}")
+
         if approved_count == 0:
             logger.warning("[NODE: debate] Validator rejected ALL comments!")
+            logger.warning("[NODE: debate] See rejection details above")
             return {"final_comments": []}
 
     except Exception as e:

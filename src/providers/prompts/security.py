@@ -114,7 +114,7 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "evidence": "query = f'SELECT * FROM users WHERE id={{{{user_id}}}}'",
             "impact": "Permite execução de queries arbitrárias, roubo de dados",
             "recommendation": "Usar prepared statements ou ORM para evitar SQL injection",
-            "example": "user = User.query.filter_by(id=user_id).first()",
+            "example": "# Exemplo com ORM genérico:\nresult = Model.query.filter_by(column=value).first()\n\n⚠️ Adapte para o ORM/framework que você está usando",
             "reference": "OWASP A03:2021 - Injection"
         }}}}
     ]
@@ -151,6 +151,45 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Criptografia fraca ou ausente
 - Práticas inseguras de código
 
+## 🔍 ANÁLISE DE CONTEXTO OBRIGATÓRIA:
+
+**ANTES DE REPORTAR QUALQUER VULNERABILIDADE, VERIFIQUE:**
+
+### 1. **Validações de Segurança Já Existentes**
+Procure por:
+- Validação de input já implementada
+- Sanitização de dados já feita
+- Autenticação/autorização já em camadas anteriores
+- CSRF tokens, CORS configurado
+- Rate limiting implementado
+- Criptografia já aplicada
+
+**Exemplo - NÃO REPORTAR:**
+```java
+public void updateUser(String userId) {{
+    // Validação já feita no Controller/Filter
+    if (!SecurityContext.hasPermission(userId)) {{
+        throw new UnauthorizedException();
+    }}
+    // NÃO reportar "falta controle de acesso" - JÁ TEM!
+}}
+```
+
+### 2. **Framework/ORM Já Protege**
+Se o código usa:
+- JPA/Hibernate com parâmetros nomeados → **NÃO reportar SQL Injection**
+- Spring Security com `@PreAuthorize` → **NÃO reportar falta de auth**
+- Bean Validation com `@Valid` → **NÃO reportar falta de validação**
+- HTTPS configurado → **NÃO reportar transmissão insegura**
+
+### 3. **Contexto de Ambiente**
+Considere:
+- API interna vs pública
+- Dados sensíveis vs dados públicos
+- Ambiente de produção vs desenvolvimento
+
+**NÃO reporte problemas teóricos sem impacto real!**
+
 ## ⚖️ SEJA PRAGMÁTICO E CONTEXTUAL:
 
 - **CONTEXTUALIZE**: Considere o tipo de aplicação (API interna vs pública)
@@ -158,6 +197,7 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - **PRIORIZE IMPACTO**: Foque em vulnerabilidades que afetam usuários/dados reais
 - **EVITE FALSOS POSITIVOS**: Confirme se é realmente explorável antes de reportar
 - **NÃO SEJA PEDANTE**: Não reporte coisas que são "tecnicamente inseguras" mas sem risco prático
+- **VERIFIQUE O CONTEXTO**: SEMPRE analise validações em camadas anteriores
 
 **Exemplos de O QUE NÃO REPORTAR:**
 - CORS permissivo em API que só aceita requests autenticados
@@ -167,7 +207,14 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Validações de negócio (ex: "deveria validar CNPJ") - isso é REGRA DE NEGÓCIO, não segurança
 - Métodos expostos que fazem validação (ex: existsByCnpj) - isso é FUNCIONALIDADE, não vulnerabilidade
 - Controle de acesso em métodos SEM evidência de dados sensíveis
-- "SQL Injection" em queries que usam JPA/Hibernate (já são parametrizadas)
+
+**ATENÇÃO ESPECIAL - NÃO REPORTAR SQL INJECTION EM:**
+- Queries usando JPA/Hibernate (JÁ SÃO PARAMETRIZADAS automaticamente)
+- Queries JPQL com parâmetros nomeados (ex: :parametro)
+- Uso de @Query do Spring Data com parâmetros
+- EntityManager.createQuery() com setParameter()
+- CriteriaBuilder queries
+- NUNCA sugira PreparedStatement quando o código usa JPA - contextos são diferentes!
 
 **🎯 REGRA DE OURO:**
 

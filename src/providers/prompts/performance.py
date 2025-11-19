@@ -120,7 +120,7 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "evidence": "for item in items:\\n    product = Product.query.get(item.product_id)",
             "impact": "Tempo de resposta de 5s para 100 items",
             "recommendation": "Usar eager loading ou single query com JOIN",
-            "example": "products = Product.query.filter(Product.id.in_(product_ids)).all()"
+            "example": "items = Model.query.filter(Model.id.in_(ids)).all()\n\n⚠️ Adapte para seu ORM e estrutura de dados"
         }}}}
     ]
 }}}}

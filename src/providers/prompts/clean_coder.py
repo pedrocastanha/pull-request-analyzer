@@ -126,7 +126,7 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "evidence": "def process_order(self, order):\\n    # 85 linhas de código...",
             "impact": "Dificulta manutenção, testes e entendimento do código",
             "recommendation": "Extrair validação, cálculo e persistência em métodos separados",
-            "example": "Criar métodos: validate_order(), calculate_totals(), persist_order()"
+            "example": "Dividir em métodos menores: validate(), calculate(), persist()\n\n⚠️ Adapte os nomes ao seu domínio"
         }}}}
     ]
 }}}}

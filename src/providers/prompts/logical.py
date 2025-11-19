@@ -136,7 +136,7 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
             "evidence": "result = total / count",
             "impact": "Crash da aplicação em runtime",
             "recommendation": "Adicionar validação antes da divisão",
-            "example": "result = total / count if count != 0 else 0"
+            "example": "if (Objects.isNull(value)) throw new IllegalArgumentException(\"mensagem apropriada\");\n\n⚠️ Adapte a validação e mensagem ao seu contexto"
         }}}}
     ]
 }}}}
@@ -147,6 +147,30 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
 - Explique o `impact` concreto (crash, dados errados, etc.)
+- No campo `example`, use código GENÉRICO + aviso de adaptação
+
+**EXEMPLOS DE `example` CORRETOS:**
+
+Exemplo 1 - Validação simples:
+```
+if (Objects.isNull(value)) throw new IllegalArgumentException("mensagem apropriada");
+
+⚠️ Adapte a validação e mensagem ao seu contexto
+```
+
+Exemplo 2 - Comparação BigDecimal:
+```
+if (denominator.compareTo(BigDecimal.ZERO) == 0) /* tratar caso */
+
+⚠️ Adapte para suas regras de negócio
+```
+
+Exemplo 3 - Try-catch:
+```
+try /* operação */ catch (Exception e) /* logger + throw */
+
+⚠️ Use sua estrutura de logs e exceptions
+```
 
 ## ⚠️ REGRAS IMPORTANTES:
 
@@ -200,12 +224,91 @@ if (totalValue == null) {{ ... }}
 if (discountValue != null) {{ ... }}
 ```
 
+**TRATAMENTO DE EXCEÇÕES:**
+- SEMPRE use `throw new IllegalArgumentException("mensagem")` para validações de parâmetros
+- SEMPRE use try-catch com logging quando apropriado
+- SEMPRE propague exceções com contexto
+
+Exemplos corretos:
+```java
+// Validação simples
+if (Objects.isNull(value)) throw new IllegalArgumentException("Value cannot be null");
+
+// Com try-catch e logging
+try /* operação */ catch (Exception e) /* logger.error + throw new CustomException */
+```
+
+**COMPARAÇÃO DE BigDecimal:**
+- SEMPRE use `.compareTo(BigDecimal.ZERO)` para comparar com zero
+- NUNCA use `.equals()` para comparações numéricas
+
+Exemplos corretos:
+```java
+if (value.compareTo(BigDecimal.ZERO) == 0) /* tratar zero */
+if (value.compareTo(BigDecimal.ZERO) > 0) /* tratar positivo */
+```
+
+## 🔍 ANÁLISE DE CONTEXTO OBRIGATÓRIA:
+
+**ANTES DE REPORTAR QUALQUER PROBLEMA, VERIFIQUE:**
+
+### 1. **Validações Já Existentes no Código**
+Procure por:
+- `Objects.isNull()` ou `Objects.nonNull()` já presentes
+- `if (value == null)` ou validações similares
+- Blocos `try-catch` que já tratam a exceção
+- `throw new IllegalArgumentException()` ou outras exceções já lançadas
+- Validações em métodos chamadores (antes do método atual)
+- Anotações de validação (`@NotNull`, `@Valid`, etc.)
+
+**Exemplo - NÃO REPORTAR:**
+```java
+public void processOrder(BigDecimal total) {{
+    if (Objects.isNull(total)) {{
+        throw new IllegalArgumentException("Total cannot be null");
+    }}
+    // Aqui NÃO precisa reportar "falta validação de null" - JÁ TEM!
+    BigDecimal tax = total.multiply(new BigDecimal("0.1"));
+}}
+```
+
+### 2. **Try-Catch Já Implementado**
+Se o código JÁ está dentro de try-catch adequado, NÃO reporte:
+- "Falta tratamento de exceção" - JÁ TEM
+- "Pode lançar exceção sem catch" - JÁ ESTÁ TRATADO
+
+**Exemplo - NÃO REPORTAR:**
+```java
+try {{
+    result = operation.execute();
+}} catch (Exception e) {{
+    logger.error("Failed to execute", e);
+    throw new CustomException("Operation failed", e);
+}}
+// NÃO reportar "falta try-catch" - JÁ TEM!
+```
+
+### 3. **Validações em Camadas Anteriores**
+Se o método recebe dados de:
+- Controller com validação de DTO (`@Valid`)
+- Service que já validou
+- Query do banco que garante `NOT NULL`
+
+**NÃO reporte validações redundantes!**
+
+### 4. **Padrões do Framework**
+Considere que:
+- JPA/Hibernate valida constraints automático
+- Spring valida `@RequestBody` com Bean Validation
+- Transações rollback automático em exceptions
+
 ## 💡 SEJA PRAGMÁTICO E CONTEXTUAL:
 
 - **PROBABILIDADE**: Foque em edge cases que PODEM acontecer na prática
 - **IMPACTO**: Priorize bugs que afetam funcionalidade crítica
-- **VALIDAÇÃO EXISTENTE**: Considere se há validação em camadas anteriores
+- **VALIDAÇÃO EXISTENTE**: SEMPRE verifique se já tem validação antes de reportar
 - **TIPO DE CÓDIGO**: API pública precisa mais validação que código interno
+- **FLUXO COMPLETO**: Analise o método inteiro, não apenas uma linha isolada
 
 **Exemplos de O QUE NÃO REPORTAR:**
 - "E se o usuário passar None?" quando há validação no endpoint

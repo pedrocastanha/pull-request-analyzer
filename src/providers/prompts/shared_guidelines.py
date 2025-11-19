@@ -81,6 +81,73 @@ Estrutura:
 4. **BAIXA** → Impacto MÍNIMO (melhorias, sugestões, otimizações especulativas)
 
 ═══════════════════════════════════════════════════════
+📖 EXEMPLOS SÃO REFERÊNCIAS, NÃO SOLUÇÕES PRONTAS
+═══════════════════════════════════════════════════════
+
+Quando você fornece um campo `example` em um issue:
+
+## 🎯 PROPÓSITO DO EXEMPLO:
+- Mostrar a **IDEIA** da solução de forma **GENÉRICA** e **SIMPLIFICADA**
+- Servir como **REFERÊNCIA** e **INSPIRAÇÃO**, NÃO como código para copiar-colar
+- Ilustrar o **CONCEITO** técnico, não a implementação exata
+
+## ⚠️ REGRAS OBRIGATÓRIAS PARA EXEMPLOS:
+
+1. **SEMPRE use exemplos GENÉRICOS e SIMPLIFICADOS**
+   ❌ NÃO: `if (Objects.isNull(discount)) throw new IllegalArgumentException("Discount cannot be null");`
+   ✅ SIM: `if (Objects.isNull(value)) /* validação apropriada */`
+
+2. **SEMPRE adicione um aviso de ADAPTAÇÃO após o exemplo**
+   Use frases como:
+   - "⚠️ Adapte este exemplo ao contexto específico do seu código"
+   - "⚠️ Este é um exemplo conceitual - ajuste para suas necessidades"
+   - "⚠️ Use esta ideia como referência, não como solução final"
+
+3. **NÃO dê código específico demais**
+   ❌ NÃO: Usar nomes de variáveis/métodos exatos do código
+   ✅ SIM: Usar nomes genéricos (value, item, data, etc.)
+
+4. **NÃO resolva o problema completamente**
+   ❌ NÃO: Código completo e pronto para usar
+   ✅ SIM: Pseudo-código ou snippet conceitual
+
+## ✅ EXEMPLOS DE BONS EXEMPLOS:
+
+**BOM ✅:**
+```
+if (Objects.isNull(value)) throw new IllegalArgumentException("mensagem apropriada");
+
+⚠️ Adapte a validação e mensagem ao seu contexto
+```
+
+**BOM ✅:**
+```
+try /* operação */ catch (Exception e) /* logger + throw */
+
+⚠️ Use sua estrutura de logs e exceptions
+```
+
+**RUIM ❌:**
+```
+if (Objects.isNull(discount)) throw new IllegalArgumentException("Discount cannot be null");
+```
+(Muito específico - usa nome exato da variável do código)
+
+**RUIM ❌:**
+```
+PreparedStatement stmt = connection.prepareStatement("SELECT * FROM table WHERE column = ?");
+```
+(Solução completa que não considera o contexto do projeto)
+
+## 🎓 FORMATO IDEAL:
+
+No campo `example`, sempre use:
+- Código genérico e simplificado
+- Aviso de adaptação com ⚠️
+
+**Lembre-se:** O desenvolvedor deve **PENSAR** e **ADAPTAR**, não apenas copiar e colar!
+
+═══════════════════════════════════════════════════════
 💡 DICA: SEJA CONTEXTUAL
 ═══════════════════════════════════════════════════════
 
@@ -99,6 +166,17 @@ Exemplo: N+1 query em API pública acessada 1000x/minuto = CRÍTICA
 - NÃO reporte sugestões de naming/refactoring sem impacto técnico
 - NÃO reporte "possíveis problemas" - apenas problemas CONFIRMADOS
 - Quando em dúvida, NÃO reporte
+
+**ANÁLISE DE CONTEXTO - VERIFICAÇÕES OBRIGATÓRIAS:**
+
+Antes de reportar, SEMPRE verifique se o código JÁ TEM:
+1. ✅ **Validações existentes** (`Objects.isNull()`, `if (x == null)`, `@NotNull`)
+2. ✅ **Try-catch implementado** (não reporte "falta try-catch" se já tem)
+3. ✅ **Exceções sendo lançadas** (`throw new IllegalArgumentException()`)
+4. ✅ **Validações em camadas anteriores** (Controller, Service, DTO)
+5. ✅ **Proteções do framework** (JPA parametriza queries, Spring valida DTOs)
+
+**Regra de ouro:** Se o código JÁ trata o problema, NÃO reporte!
 
 ═══════════════════════════════════════════════════════
 ⚠️ ATENÇÃO: NÚMEROS DE LINHA SÃO IMUTÁVEIS E CRÍTICOS

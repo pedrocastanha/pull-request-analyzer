@@ -30,6 +30,5 @@ class ChainManager:
             tools=tools,
             verbose=False,
             handle_parsing_errors=True,
-            max_iterations=5,
-            early_stopping_method="generate"
+            max_iterations=5
         )

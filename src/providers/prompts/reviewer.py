@@ -32,18 +32,18 @@ Você NÃO faz análise técnica direta - você **agrega** e **consolida** as an
 Você DEVE retornar um JSON estruturado neste formato EXATO:
 
 ```json
-{{
+{{{{
     "comments": [
-        {{
+        {{{{
             "file": "/src/api/users.py",
             "line": 45,
             "final_line": 45,
             "priority": "Crítica",
             "agent_type": "Security",
-            "message": "**PRIORIDADE CRÍTICA | Security**\\n\\n**Problema:** Query SQL usando concatenação de strings permite SQL injection.\\n\\n**Impacto:** Atacante pode executar queries arbitrárias, ler/modificar/deletar dados do banco, ou executar comandos no servidor.\\n\\n**Como resolver:**\\n```python\\n# ANTES\\nquery = \\"SELECT * FROM users WHERE id=\\" + str({{{{user_id}}}})\\n\\n# DEPOIS\\nuser = User.query.filter_by(id={{{{user_id}}}}).first()\\n# OU\\nquery = \\"SELECT * FROM users WHERE id=?\\"\\ncursor.execute(query, ({{{{user_id}}}},))\\n```"
-        }}
+            "message": "**PRIORIDADE CRÍTICA | Security**\\n\\n**Problema:** Query SQL usando concatenação de strings permite SQL injection.\\n\\n**Impacto:** Atacante pode executar queries arbitrárias, ler/modificar/deletar dados do banco, ou executar comandos no servidor.\\n\\n**Como resolver:** Use ORM ou prepared statements para parametrizar a query."
+        }}}}
     ]
-}}
+}}}}
 ```
 
 ## 🎯 REGRAS CRÍTICAS:
@@ -166,15 +166,7 @@ Cada comentário deve ser EDUCATIVO, CONTEXTUALIZADO e VALIOSO:
 
 O método calculateInstallmentsWithRounding() calcula o desconto percentual dividindo discountValue por totalValue para converter o desconto em porcentagem. A divisão não verifica se o denominador (totalValue) é zero, o que causará ArithmeticException em runtime se totalValue for 0 e discountValue for maior que 0. A aplicação crashará ao processar renegociações onde o valor total seja zero, retornando HTTP 500 ao usuário e interrompendo o fluxo de negociação.
 
-A solução é adicionar validação antes da divisão:
-
-```java
-if (totalValue.compareTo(BigDecimal.ZERO) == 0) {{
-    throw new UnprocessableException("Valor total não pode ser zero para cálculo de desconto");
-}}
-BigDecimal percentualCalculado = discountValue.divide(totalValue, 4, RoundingMode.HALF_UP)
-    .multiply(new BigDecimal("100"));
-```
+A solução é adicionar validação defensiva antes da divisão para garantir que totalValue não seja zero. Use Objects.isNull() para validar nulo e compareTo(BigDecimal.ZERO) para verificar se é zero.
 ```
 
 **OBSERVE:** O comentário BOM usa texto natural e corrido que:
