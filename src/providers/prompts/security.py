@@ -42,6 +42,8 @@ search_pr_code(
 - `search_pr_code(query="eval exec process")`
 - `search_pr_code(query="cookie session")`
 
+**ATENÇÃO:** A ferramenta retorna o resultado com números de linha. **USE ESSES NÚMEROS** no campo `line` do issue!
+
 ---
 
 ### PASSO 2: Validar e Aprofundar com `search_knowledge`
@@ -69,34 +71,36 @@ search_knowledge(
 
 ## 📋 O QUE ANALISAR:
 
-### 1. **Injection Attacks**
+### 1. **Segurança JWT e Autenticação (JAVA)**
+- JWT com algoritmo assimétrico (RS256) com chave pública/privada
+- Claims obrigatórios: audience, issuedAt, expiresAt
+- Verificação do tipo de token antes de aceitar
+- @PreAuthorize com princípio de privilégio mínimo
+- Sem senhas/tokens hardcoded
+
+### 2. **CORS e Configurações de Segurança**
+- CORS restrito (NUNCA allowed-origins: "*")
+- Apenas domínios confiáveis configurados
+- Headers de segurança presentes
+- Debug mode desabilitado em produção
+
+### 3. **Validação de Entrada (Bean Validation)**
+- @NotNull, @Size, @Pattern em DTOs
+- @Valid nos parâmetros de controller
+- ConstraintValidator para validações customizadas
+- Sanitização de inputs
+
+### 4. **Injection Attacks**
 - SQL Injection
 - Command Injection
 - Code Injection (eval, exec)
 - LDAP Injection
 
-### 2. **Authentication & Authorization**
-- Senhas hardcoded
-- Tokens expostos
-- Bypass de autenticação
-- Controle de acesso inadequado
-
-### 3. **Sensitive Data Exposure**
+### 5. **Sensitive Data Exposure**
 - Logs com dados sensíveis
 - API keys no código
 - Credenciais commitadas
 - PII (Personal Identifiable Information)
-
-### 4. **Security Misconfiguration**
-- Debug mode habilitado
-- CORS mal configurado
-- Headers de segurança ausentes
-- Criptografia fraca
-
-### 5. **Dependencies & Libraries**
-- Bibliotecas desatualizadas
-- Dependências com vulnerabilidades conhecidas
-- Imports inseguros
 
 ## 📤 FORMATO DE RESPOSTA:
 
@@ -125,12 +129,14 @@ Retorne um JSON estruturado com TODOS os issues encontrados:
 - Se NÃO encontrar nenhum problema, retorne: `{{{{"issues": []}}}}`
 - Cada issue DEVE ter `file`, `line`, `type`
 - `final_line` é opcional (use quando o problema abrange múltiplas linhas)
-- Seja específico: indique a linha EXATA do problema
+- **LINHA EXATA OBRIGATÓRIA**: Indique a linha REAL onde o problema ocorre
+- **NUNCA use `line: 1`** a menos que o problema esteja realmente na linha 1
+- Use `search_pr_code` para encontrar o trecho exato e sua linha
 
 ## ⚠️ REGRAS IMPORTANTES:
 
-1. **Seja específico**: Sempre indique arquivo e linha exata
-2. **Evidências**: Mostre o código problemático
+1. **Linha exata**: SEMPRE indique a linha REAL do problema (busque no código)
+2. **Evidências**: Mostre o código problemático COM número de linha correto
 3. **Soluções práticas**: Dê recomendações acionáveis
 4. **Use a tool**: Busque contexto quando necessário com namespace="security"
 5. **Não presuma**: Se não tiver certeza, use a tool para buscar informações
