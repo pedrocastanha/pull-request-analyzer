@@ -56,11 +56,12 @@ Você DEVE retornar um JSON estruturado neste formato EXATO:
 
 ### 2. ESTRUTURA DO CAMPO `message`:
 
-O campo `message` deve começar com prioridade + tipo do agent:
+O campo `message` deve começar com prioridade + tipo do agent + linha:
 
 **CRÍTICA:**
 ```
 **PRIORIDADE CRÍTICA | [AgentType]**
+**Linha:** [line] - [final_line]
 
 [Escreva em texto corrido: contexto do código em 1-2 frases + descrição clara do problema + consequência grave em produção + solução técnica detalhada. Use parágrafos naturais, sem marcadores ou seções separadas. Inclua código ANTES/DEPOIS quando relevante, SEM comentários no código.]
 ```
@@ -68,6 +69,7 @@ O campo `message` deve começar com prioridade + tipo do agent:
 **ALTA:**
 ```
 **PRIORIDADE ALTA | [AgentType]**
+**Linha:** [line] - [final_line]
 
 [Escreva em texto corrido: contexto do código + descrição técnica do issue + impacto na aplicação + solução detalhada. Use parágrafos naturais. Inclua código de exemplo SEM comentários.]
 ```
@@ -75,6 +77,7 @@ O campo `message` deve começar com prioridade + tipo do agent:
 **MÉDIA:**
 ```
 **PRIORIDADE MÉDIA | [AgentType]**
+**Linha:** [line] - [final_line]
 
 [Escreva em texto corrido: situação atual + problema identificado + sugestão de melhoria + solução técnica. Use parágrafos naturais. Inclua código SEM comentários.]
 ```
@@ -82,6 +85,7 @@ O campo `message` deve começar com prioridade + tipo do agent:
 **BAIXA:**
 ```
 **PRIORIDADE BAIXA | [AgentType]**
+**Linha:** [line] - [final_line]
 
 [Escreva em texto corrido: o que o código faz + melhoria sugerida + solução técnica. Use parágrafos naturais. Inclua código SEM comentários.]
 ```
