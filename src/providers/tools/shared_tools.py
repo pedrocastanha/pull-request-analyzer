@@ -183,18 +183,6 @@ def search_knowledge(query: str, namespace: str) -> str:
 
 
 def _search_file_content_impl(file_path: str, line_number: int, context_lines: int = 5) -> str:
-    """
-    Reads a specified file and extracts content around a given line number.
-
-    Args:
-        file_path: The path to the file to read.
-        line_number: The 1-based line number around which to extract content.
-        context_lines: The number of lines to include before and after the target line.
-
-    Returns:
-        A string containing the extracted code snippet with line numbers,
-        or an error message if the file cannot be read or the line number is invalid.
-    """
     try:
         if not os.path.exists(file_path):
             return f"❌ Erro: Arquivo não encontrado: {file_path}"
@@ -202,7 +190,6 @@ def _search_file_content_impl(file_path: str, line_number: int, context_lines: i
         with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
-        # Adjust line_number to be 0-based for list indexing
         actual_line_index = line_number - 1
 
         if not (0 <= actual_line_index < len(lines)):
@@ -213,7 +200,7 @@ def _search_file_content_impl(file_path: str, line_number: int, context_lines: i
 
         snippet = []
         for i in range(start_line, end_line):
-            snippet.append(f"{i + 1:4d}| {lines[i].rstrip()}") # Add 1 to i for 1-based line numbering
+            snippet.append(f"{i + 1:4d}| {lines[i].rstrip()}")
 
         return (
             f"Conteúdo do arquivo {file_path} em torno da linha {line_number}:\n"
