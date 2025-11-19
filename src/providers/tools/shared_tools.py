@@ -17,8 +17,7 @@ def set_rag_manager(rag_manager):
     logger.info("[TOOLS] RAG Manager set for current context")
 
 
-@tool
-def search_pr_code(
+def _search_pr_code_impl(
     query: str, top_k: int = 5, filter_extension: Optional[str] = None
 ) -> str:
     """
@@ -79,6 +78,53 @@ def search_pr_code(
         return f"❌ Erro ao buscar código: {str(e)}"
 
 
+@tool
+def search_pr_code(query: str = "", top_k: int = 5, filter_extension: Optional[str] = None, **kwargs) -> str:
+    """
+    🔍 Busca trechos de código relevantes no PR atual usando busca semântica vetorial.
+
+    QUANDO USAR:
+    - Ao procurar código relacionado a um tópico específico
+    - Para verificar se existem mudanças em determinada área
+    - Antes de analisar, para encontrar trechos relevantes
+
+    Args:
+        query: Descrição do que você procura. Seja específico e use termos técnicos.
+               Exemplos:
+                 - "código que faz autenticação de usuários"
+                 - "queries SQL ou acesso a banco de dados"
+                 - "validação de entrada de usuários"
+                 - "uso de bibliotecas de criptografia"
+
+        top_k: Quantos trechos retornar (padrão: 5, máximo recomendado: 10)
+
+        filter_extension: Filtrar por tipo de arquivo (opcional)
+                         Exemplos: "py", "ts", "java", "js"
+
+    Returns:
+        String contendo os trechos de código mais relevantes encontrados,
+        com informações do arquivo, linhas modificadas e o diff.
+
+    IMPORTANTE:
+    - Esta tool busca APENAS no código do PR atual (não em livros técnicos)
+    - Para buscar em livros técnicos, use search_informations
+    - Faça queries ESPECÍFICAS para melhores resultados
+    - Se não encontrar nada, tente reformular a query
+
+    Exemplos de uso:
+        search_pr_code("autenticação com JWT ou tokens")
+        search_pr_code("loops aninhados ou iterações", top_k=3)
+        search_pr_code("imports de bibliotecas de segurança", filter_extension="py")
+    """
+    if 'query=' in kwargs:
+        query = kwargs['query=']
+
+    if not query:
+        return "❌ Parâmetro 'query' é obrigatório"
+
+    return _search_pr_code_impl(query=query, top_k=top_k, filter_extension=filter_extension)
+
+
 @lru_cache(maxsize=4)
 def _get_pinecone_manager(namespace: str) -> PineconeManager:
     logger.info(f"[PINECONE] Creating new manager for namespace: {namespace}")
@@ -86,10 +132,10 @@ def _get_pinecone_manager(namespace: str) -> PineconeManager:
 
 
 @tool
-def search_informations(query: str, namespace: str) -> str:
+def search_knowledge(query: str, namespace: str) -> str:
     """
-    Esta tool acessa uma base de conhecimento vetorial (Pinecone) contendo conteúdo de livros
-    técnicos especializados em diferentes áreas de engenharia de software.
+    Esta tool é a sua base de conhecimento técnico contendo conteúdo de livros
+    técnicos mais famosos e especializados em diferentes áreas de engenharia de software.
 
     Args:
         query: Descrição do que você precisa buscar. Seja específico e use termos técnicos.
@@ -129,7 +175,7 @@ def search_informations(query: str, namespace: str) -> str:
         if not relevant_chunks:
             return f"Nenhuma informação encontrada para '{query}' no namespace '{namespace}'. Tente reformular a query ou verificar se o namespace está correto."
 
-        return f"Informações encontradas para '{query}' (namespace: {namespace}):\n\n{relevant_chunks}"
+        return f"Informações encontradas para '{query}':\n\n{relevant_chunks}"
     except Exception as e:
         logger.error(f"[TOOL: search_informations] Error searching: {e}")
         return f"Erro ao buscar informações: {str(e)}"

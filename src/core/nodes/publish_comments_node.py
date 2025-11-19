@@ -54,6 +54,8 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
         comments=comments
     )
 
+    published_comments_list = publication_stats.get("published_comments", [])
+
     logger.info(
         f"[NODE: publish_comments] ✅ Publication complete: "
         f"{publication_stats['successful']}/{publication_stats['total_comments']} "
@@ -69,5 +71,5 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
             logger.debug(f"[NODE: publish_comments] Error detail: {error}")
 
     return {
-        "publication_stats": publication_stats
+        "published_comments": published_comments_list
     }

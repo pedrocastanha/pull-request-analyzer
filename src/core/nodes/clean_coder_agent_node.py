@@ -4,7 +4,7 @@ from pydantic import ValidationError
 
 from src.core import PRAnalysisState
 from src.providers import AgentManager
-from src.providers.tools.shared_tools import search_informations, search_pr_code
+from src.providers.tools.shared_tools import search_knowledge, search_pr_code
 from src.schemas import CleanCodeAnalysis
 from src.utils.json_parser import parse_llm_json_response
 from src.utils.issue_classifier import IssueClassifier
@@ -56,7 +56,7 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         callback = AgentManager.get_callback(verbose=True)
 
         agent = AgentManager.get_agents(
-            tools=[search_informations, search_pr_code], agent_name="CleanCoder"
+            tools=[search_knowledge, search_pr_code], agent_name="CleanCoder"
         )
 
         response = await agent.ainvoke(

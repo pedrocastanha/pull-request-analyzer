@@ -392,7 +392,8 @@ class AzureManager:
             "successful": 0,
             "failed": 0,
             "threads_created": [],
-            "errors": []
+            "errors": [],
+            "published_comments": []
         }
 
         try:
@@ -413,6 +414,12 @@ class AzureManager:
                 if thread_result:
                     stats["successful"] += 1
                     stats["threads_created"].append(thread_result.get("id"))
+                    stats["published_comments"].append({
+                        "file": file_path,
+                        "line": line_number,
+                        "message": message,
+                        "thread_id": thread_result.get("id")
+                    })
                 else:
                     stats["failed"] += 1
                     stats["errors"].append({

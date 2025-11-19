@@ -51,8 +51,6 @@ class ToolMonitorCallback(BaseCallbackHandler):
         self.tool_calls_history.append(call_record)
 
         self._print_colored("\n" + "─" * 80, Fore.MAGENTA)
-        self._print_colored(f"⏱️  TIMESTAMP: {timestamp}", Fore.WHITE)
-        self._print_colored(f"🤖 LLM: {self.current_llm}", Fore.CYAN, bright=True)
         self._print_colored(f"🔧 TOOL CHAMADA: {tool_name}", Fore.GREEN, bright=True)
         self._print_colored(f"📝 QUERY/INPUT:", Fore.YELLOW, bright=True)
         self._print_colored(f"   {input_str}", Fore.YELLOW)

@@ -26,5 +26,10 @@ class ChainManager:
         )
 
         return AgentExecutor(
-            agent=agent, tools=tools, verbose=False, handle_parsing_errors=True
+            agent=agent,
+            tools=tools,
+            verbose=False,
+            handle_parsing_errors=True,
+            max_iterations=5,
+            early_stopping_method="generate"
         )
