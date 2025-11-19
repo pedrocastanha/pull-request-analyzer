@@ -7,7 +7,7 @@ from src.utils.callbacks import ToolMonitorCallback
 class AgentManager:
     @staticmethod
     def get_agents(tools: List, agent_name: str):
-        llm = LLMManager.get_llm(model="gpt-4.1")
+        llm = LLMManager.get_llm(model="gpt-4.1-mini")
         return ChainManager.get_agent_executor(llm, tools, agent_name)
 
     @staticmethod
