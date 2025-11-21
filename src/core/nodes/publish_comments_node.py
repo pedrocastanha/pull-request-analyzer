@@ -8,21 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
-    """
-    Node final do LangGraph que publica comentários de análise no Azure DevOps PR.
-
-    Este node:
-    1. Recebe o state contendo todas as análises dos agentes
-    2. Extrai os comentários/issues de cada análise
-    3. Publica cada comentário como uma thread no Azure DevOps PR
-    4. Retorna estatísticas de publicação
-
-    Args:
-        state: Estado do LangGraph contendo pr_id e todas as análises
-
-    Returns:
-        Dicionário com estatísticas de publicação para atualizar o state
-    """
     logger.info("[NODE: publish_comments] Starting comment publication to Azure DevOps")
 
     pr_id = state.get("pr_id")
@@ -35,14 +20,14 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     reviewer_analysis = state.get("reviewer_analysis")
 
-    if not reviewer_analysis:
-        logger.warning("[NODE: publish_comments] ⚠️ No reviewer analysis found to publish")
+    if not reviewer_analysis or not reviewer_analysis.get("comments"):
+        logger.warning("[NODE: publish_comments] ⚠️ No reviewer comments found to publish")
         return {
             "publication_stats": {
                 "total_comments": 0,
                 "successful": 0,
                 "failed": 0,
-                "message": "No reviewer analysis to publish"
+                "message": "No reviewer comments to publish"
             }
         }
 
@@ -69,6 +54,8 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
         comments=comments
     )
 
+    published_comments_list = publication_stats.get("published_comments", [])
+
     logger.info(
         f"[NODE: publish_comments] ✅ Publication complete: "
         f"{publication_stats['successful']}/{publication_stats['total_comments']} "
@@ -84,5 +71,5 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
             logger.debug(f"[NODE: publish_comments] Error detail: {error}")
 
     return {
-        "publication_stats": publication_stats
+        "published_comments": published_comments_list
     }

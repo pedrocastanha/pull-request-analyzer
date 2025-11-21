@@ -37,27 +37,26 @@ async def analyze_pr(request: AnalyzePRRequest):
                 "analysis": None,
             }
 
-        reviewer_analysis = result.get("reviewer_analysis", {})
-        comments = reviewer_analysis.get("comments", [])
+        published_comments = result.get("published_comments", [])
 
         logger.info(
             f"[API] PR #{request.pull_request_id} analysis completed successfully. "
-            f"Comments generated: {len(comments)}"
+            f"Comments generated: {len(published_comments)}"
         )
 
-        if comments:
-            logger.debug(f"[API] Sample comment structure: {comments[0]}")
+        if published_comments:
+            logger.debug(f"[API] Sample comment structure: {published_comments[0]}")
 
         try:
             response = {
                 "status": "success",
                 "message": "PR analysis completed successfully",
                 "pr_id": request.pull_request_id,
-                "comments": comments,
-                "total_comments": len(comments),
+                "comments": published_comments,
+                "total_comments": len(published_comments),
                 "error": None,
             }
-            logger.info(f"[API] Returning response with {len(comments)} comments")
+            logger.info(f"[API] Returning response with {len(published_comments)} comments")
             return response
         except Exception as e:
             logger.error(f"[API] Error creating response: {str(e)}", exc_info=True)

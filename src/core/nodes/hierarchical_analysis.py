@@ -7,7 +7,7 @@ from src.core.states import (
     ModuleAgentAnalysis,
 )
 from src.providers import AgentManager
-from src.providers.tools.shared_tools import search_informations
+from src.providers.tools.shared_tools import search_knowledge
 from src.utils.json_parser import parse_llm_json_response
 
 logger = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ async def analyze_modules_hierarchically(state: HierarchicalPRAnalysisState) -> 
 async def _run_agent_analysis(context: str, agent_name: str) -> Dict[str, Any]:
     try:
         agent = AgentManager.get_agents(
-            tools=[search_informations], agent_name=agent_name
+            tools=[search_knowledge], agent_name=agent_name
         )
         response = await agent.ainvoke({"context": context})
 
