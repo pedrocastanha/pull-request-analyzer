@@ -10,7 +10,7 @@ from src.router import router as pr_analyzer_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("🚀 Starting PR analyzer application...")
+    logger.info("Starting PR analyzer application...")
     yield
 
 

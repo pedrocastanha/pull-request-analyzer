@@ -4,11 +4,26 @@ from typing import List, Dict, Tuple
 logger = logging.getLogger(__name__)
 
 IGNORED_EXTENSIONS = {
-    "md", "txt", "json", "yaml", "yml", "toml",
-    "lock", "sum", "mod",
-    "png", "jpg", "jpeg", "gif", "svg", "ico",
-    "pdf", "doc", "docx",
-    "csv", "xml"
+    "md",
+    "txt",
+    "json",
+    "yaml",
+    "yml",
+    "toml",
+    "lock",
+    "sum",
+    "mod",
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "svg",
+    "ico",
+    "pdf",
+    "doc",
+    "docx",
+    "csv",
+    "xml",
 }
 
 IGNORED_PATTERNS = [
@@ -20,7 +35,7 @@ IGNORED_PATTERNS = [
     ".env",
     ".gitignore",
     "LICENSE",
-    "README"
+    "README",
 ]
 
 
@@ -35,9 +50,8 @@ def filter_analyzable_files(files: List[Dict]) -> Tuple[List[Dict], List[Dict]]:
 
         filename = file_path.split("/")[-1]
 
-        should_ignore = (
-            extension in IGNORED_EXTENSIONS or
-            any(pattern in filename for pattern in IGNORED_PATTERNS)
+        should_ignore = extension in IGNORED_EXTENSIONS or any(
+            pattern in filename for pattern in IGNORED_PATTERNS
         )
 
         if should_ignore:

@@ -5,13 +5,13 @@ from src.providers.prompts_manager import PromptManager
 
 class ChainManager:
     @staticmethod
-    def get_agent_chain(llm, agent_name):
-        agent_prompt = PromptManager.get_agent_prompt(agent_name)
+    def get_agent_chain(llm, agent_name, project_type: str = "java"):
+        agent_prompt = PromptManager.get_agent_prompt(agent_name, project_type)
         return agent_prompt | llm
 
     @staticmethod
-    def get_agent_executor(llm, tools, agent_name):
-        base_prompt = PromptManager.get_agent_prompt(agent_name)
+    def get_agent_executor(llm, tools, agent_name, project_type: str = "java"):
+        base_prompt = PromptManager.get_agent_prompt(agent_name, project_type)
 
         prompt_with_tools = ChatPromptTemplate.from_messages(
             [
@@ -30,5 +30,5 @@ class ChainManager:
             tools=tools,
             verbose=False,
             handle_parsing_errors=True,
-            max_iterations=5
+            max_iterations=5,
         )

@@ -14,12 +14,15 @@ headers = {
 
 class AzureManager:
     @staticmethod
-    def get_pr_consolidated_changes(pr_id: int) -> Optional[Dict]:
+    def get_pr_consolidated_changes(
+        pr_id: int, repository_id: str = None
+    ) -> Optional[Dict]:
         logger.info(
             f"Fetching consolidated changes for PR #{pr_id} (branch comparison)"
         )
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
-            pr_url = f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/pullrequests/{pr_id}?api-version={Settings.AZURE_API_VERSION}"
+            pr_url = f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/pullrequests/{pr_id}?api-version={Settings.AZURE_API_VERSION}"
 
             logger.debug(f"Fetching PR info: {pr_url}")
             pr_response = requests.get(pr_url, headers=headers)
@@ -39,7 +42,7 @@ class AzureManager:
             logger.info(f"Comparing branches: {source_branch} → {target_branch}")
 
             diff_url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/diffs/commits?"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/diffs/commits?"
                 f"api-version={Settings.AZURE_API_VERSION}&"
                 f"baseVersionType=branch&baseVersion={target_branch}&"
                 f"targetVersionType=branch&targetVersion={source_branch}&"
@@ -74,10 +77,10 @@ class AzureManager:
                 logger.debug(f"Processing file: {file_path}")
 
                 old_content = AzureManager.get_old_file_content(
-                    common_commit, file_path
+                    common_commit, file_path, repo_id
                 )
                 new_content = AzureManager.get_target_file_content(
-                    target_commit, file_path
+                    target_commit, file_path, repo_id
                 )
 
                 diff_result = AzureManager.calculate_diff(
@@ -125,11 +128,12 @@ class AzureManager:
             return None
 
     @staticmethod
-    def get_commit_changes(id: str):
+    def get_commit_changes(id: str, repository_id: str = None):
         logger.debug(f"Fetching commit changes from Azure DevOps")
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
             url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/diffs/commits?api-version={Settings.AZURE_API_VERSION}&"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/diffs/commits?api-version={Settings.AZURE_API_VERSION}&"
                 f"baseVersionType=branch&baseVersion=develop&targetVersionType=commit&targetVersion={id}&diffCommonCommit=true&$top=100"
             )
 
@@ -149,12 +153,15 @@ class AzureManager:
             return None
 
     @staticmethod
-    def get_old_file_content(commonCommit: str, path: str) -> Optional[str]:
+    def get_old_file_content(
+        commonCommit: str, path: str, repository_id: str = None
+    ) -> Optional[str]:
         logger.debug(f"Fetching old file content: {path} @ {commonCommit[:8]}")
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
             clean_path = path.lstrip("/")
             url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/items"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/items"
                 f"?path={clean_path}&versionType=commit&version={commonCommit}"
                 f"&api-version={Settings.AZURE_API_VERSION}"
             )
@@ -177,12 +184,15 @@ class AzureManager:
             return None
 
     @staticmethod
-    def get_target_file_content(commitId: str, path: str) -> Optional[str]:
+    def get_target_file_content(
+        commitId: str, path: str, repository_id: str = None
+    ) -> Optional[str]:
         logger.debug(f"Fetching target file content: {path} @ {commitId[:8]}")
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
             clean_path = path.lstrip("/")
             url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/items"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/items"
                 f"?path={clean_path}&versionType=commit&version={commitId}"
                 f"&api-version={Settings.AZURE_API_VERSION}"
             )
@@ -283,33 +293,35 @@ class AzureManager:
         file_path: str,
         line_number: Optional[int] = None,
         comment_text: str = "",
+        repository_id: str = None,
     ) -> Optional[Dict]:
-        logger.info(f"Creating comment thread on PR #{pr_id} for file {file_path} at line {line_number}")
-
+        logger.info(
+            f"Creating comment thread on PR #{pr_id} for file {file_path} at line {line_number}"
+        )
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
             url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/"
                 f"pullRequests/{pr_id}/threads?api-version={Settings.AZURE_API_VERSION}"
             )
 
             payload = {
-                "comments": [
-                    {
-                        "content": comment_text,
-                        "commentType": 1
-                    }
-                ],
+                "comments": [{"content": comment_text, "commentType": 1}],
                 "status": 1,
             }
 
             if line_number is not None:
-                normalized_path = file_path if file_path.startswith("/") else f"/{file_path}"
+                normalized_path = (
+                    file_path if file_path.startswith("/") else f"/{file_path}"
+                )
                 payload["threadContext"] = {
                     "filePath": normalized_path,
                     "rightFileStart": {"line": line_number, "offset": 1},
-                    "rightFileEnd": {"line": line_number, "offset": 1000}
+                    "rightFileEnd": {"line": line_number, "offset": 1000},
                 }
-                logger.info(f"Thread context set: filePath={normalized_path}, line={line_number}")
+                logger.info(
+                    f"Thread context set: filePath={normalized_path}, line={line_number}"
+                )
 
             logger.debug(f"Payload: {payload}")
             response = requests.post(url, json=payload, headers=headers)
@@ -340,20 +352,18 @@ class AzureManager:
         thread_id: int,
         comment_text: str,
         parent_comment_id: Optional[int] = None,
+        repository_id: str = None,
     ) -> Optional[Dict]:
         logger.info(f"Adding comment to thread #{thread_id} on PR #{pr_id}")
-
+        repo_id = repository_id or Settings.AZURE_ERP_BACKEND_REPOSITORY_ID
         try:
             url = (
-                f"{Settings.AZURE_BASE_URL}/repositories/{Settings.AZURE_REPOSITORY_ID}/"
+                f"{Settings.AZURE_BASE_URL}/repositories/{repo_id}/"
                 f"pullRequests/{pr_id}/threads/{thread_id}/comments?"
                 f"api-version={Settings.AZURE_API_VERSION}"
             )
 
-            payload = {
-                "content": comment_text,
-                "commentType": 1
-            }
+            payload = {"content": comment_text, "commentType": 1}
 
             if parent_comment_id is not None:
                 payload["parentCommentId"] = parent_comment_id
@@ -384,7 +394,9 @@ class AzureManager:
             return None
 
     @staticmethod
-    def publish_analysis_comments(pr_id: int, comments: List[Dict]) -> Dict[str, Any]:
+    def publish_analysis_comments(
+        pr_id: int, comments: List[Dict], repository_id: str = None
+    ) -> Dict[str, Any]:
         logger.info(f"Publishing analysis comments to PR #{pr_id}")
 
         stats = {
@@ -393,7 +405,7 @@ class AzureManager:
             "failed": 0,
             "threads_created": [],
             "errors": [],
-            "published_comments": []
+            "published_comments": [],
         }
 
         try:
@@ -408,25 +420,30 @@ class AzureManager:
                     pr_id=pr_id,
                     file_path=file_path,
                     line_number=line_number,
-                    comment_text=message
+                    comment_text=message,
+                    repository_id=repository_id,
                 )
 
                 if thread_result:
                     stats["successful"] += 1
                     stats["threads_created"].append(thread_result.get("id"))
-                    stats["published_comments"].append({
-                        "file": file_path,
-                        "line": line_number,
-                        "message": message,
-                        "thread_id": thread_result.get("id")
-                    })
+                    stats["published_comments"].append(
+                        {
+                            "file": file_path,
+                            "line": line_number,
+                            "message": message,
+                            "thread_id": thread_result.get("id"),
+                        }
+                    )
                 else:
                     stats["failed"] += 1
-                    stats["errors"].append({
-                        "file": file_path,
-                        "line": line_number,
-                        "error": "Failed to create thread"
-                    })
+                    stats["errors"].append(
+                        {
+                            "file": file_path,
+                            "line": line_number,
+                            "error": "Failed to create thread",
+                        }
+                    )
 
             logger.info(
                 f"✓ Published {stats['successful']}/{stats['total_comments']} comments "

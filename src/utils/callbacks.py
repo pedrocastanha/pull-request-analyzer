@@ -25,7 +25,7 @@ class ToolMonitorCallback(BaseCallbackHandler):
         self.current_llm = None
 
         if not COLORS_AVAILABLE and verbose:
-            print("⚠️  Instale 'colorama' para ter saída colorida: pip install colorama")
+            print("  Instale 'colorama' para ter saída colorida: pip install colorama")
 
     def _print_colored(
         self, text: str, color: str = Fore.WHITE, bright: bool = False
@@ -51,7 +51,7 @@ class ToolMonitorCallback(BaseCallbackHandler):
         self.tool_calls_history.append(call_record)
 
         self._print_colored("\n" + "─" * 80, Fore.MAGENTA)
-        self._print_colored(f"🔧 TOOL CHAMADA: {tool_name}", Fore.GREEN, bright=True)
+        self._print_colored(f" TOOL CHAMADA: {tool_name}", Fore.GREEN, bright=True)
         self._print_colored(f"📝 QUERY/INPUT:", Fore.YELLOW, bright=True)
         self._print_colored(f"   {input_str}", Fore.YELLOW)
         self._print_colored("─" * 80, Fore.MAGENTA)
@@ -60,7 +60,7 @@ class ToolMonitorCallback(BaseCallbackHandler):
         if self.tool_calls_history:
             self.tool_calls_history[-1]["result"] = output
 
-        self._print_colored(f"✅ RESULTADO:", Fore.GREEN, bright=True)
+        self._print_colored(f" RESULTADO:", Fore.GREEN, bright=True)
 
         try:
             if output.strip().startswith(("{", "[")):
@@ -91,7 +91,7 @@ class ToolMonitorCallback(BaseCallbackHandler):
         self._print_colored("─" * 80 + "\n", Fore.MAGENTA)
 
     def on_tool_error(self, error: Exception, **kwargs: Any) -> None:
-        self._print_colored(f"❌ ERRO NA TOOL:", Fore.RED, bright=True)
+        self._print_colored(f" ERRO NA TOOL:", Fore.RED, bright=True)
         self._print_colored(f"   {str(error)}", Fore.RED)
         self._print_colored("─" * 80 + "\n", Fore.MAGENTA)
 
@@ -103,7 +103,7 @@ class ToolMonitorCallback(BaseCallbackHandler):
 
     def print_summary(self) -> None:
         self._print_colored("\n" + "=" * 80, Fore.CYAN, bright=True)
-        self._print_colored("📊 RESUMO DE CHAMADAS DE TOOLS", Fore.CYAN, bright=True)
+        self._print_colored(" RESUMO DE CHAMADAS DE TOOLS", Fore.CYAN, bright=True)
         self._print_colored("=" * 80, Fore.CYAN, bright=True)
         self._print_colored(
             f"Total de chamadas: {len(self.tool_calls_history)}", Fore.WHITE

@@ -3,8 +3,79 @@ from typing import Dict, Any
 
 from src.core.state import PRAnalysisState
 from src.utils.azure_requests import AzureManager
+from src.utils.diff_parser import DiffParser
 
 logger = logging.getLogger(__name__)
+
+
+def validate_and_fix_line_number(
+    file_path: str, line_number: int, pr_data: Dict
+) -> int:
+    """
+    Valida se o número de linha está dentro de um diff válido.
+    Se não estiver, tenta encontrar a linha mais próxima no diff.
+
+    Args:
+        file_path: Caminho do arquivo
+        line_number: Número da linha reportada
+        pr_data: Dados do PR com informações de diff
+
+    Returns:
+        Número de linha válido (original ou ajustado)
+    """
+    files = pr_data.get("files", [])
+    file_data = next((f for f in files if f.get("path") == file_path), None)
+
+    if not file_data:
+        logger.warning(
+            f"[publish_comments] File {file_path} not found in PR data, using line {line_number} as-is"
+        )
+        return line_number
+
+    diff_text = file_data.get("diff", "")
+    if not diff_text:
+        logger.warning(
+            f"[publish_comments] No diff for {file_path}, using line {line_number} as-is"
+        )
+        return line_number
+
+    line_ranges = DiffParser.get_changed_line_ranges(diff_text)
+
+    if not line_ranges:
+        logger.warning(
+            f"[publish_comments] No line ranges found in diff for {file_path}"
+        )
+        return line_number
+
+    for start, end in line_ranges:
+        if start <= line_number <= end:
+            logger.debug(
+                f"[publish_comments] Line {line_number} is valid (within range {start}-{end})"
+            )
+            return line_number
+
+    logger.warning(
+        f"[publish_comments] Line {line_number} not in valid ranges {line_ranges} for {file_path}"
+    )
+
+    closest_line = line_number
+    min_distance = float("inf")
+
+    for start, end in line_ranges:
+        distance_to_start = abs(line_number - start)
+        distance_to_end = abs(line_number - end)
+
+        if distance_to_start < min_distance:
+            min_distance = distance_to_start
+            closest_line = start
+        if distance_to_end < min_distance:
+            min_distance = distance_to_end
+            closest_line = end
+
+    logger.info(
+        f"[publish_comments] Adjusted line {line_number} → {closest_line} for {file_path}"
+    )
+    return closest_line
 
 
 def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
@@ -13,22 +84,23 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
     pr_id = state.get("pr_id")
 
     if not pr_id:
-        logger.error("[NODE: publish_comments] ❌ No PR ID found in state")
-        return {
-            "error": "No PR ID available for publishing comments"
-        }
+        logger.error("[NODE: publish_comments]  No PR ID found in state")
+        return {"error": "No PR ID available for publishing comments"}
 
     reviewer_analysis = state.get("reviewer_analysis")
 
     if not reviewer_analysis or not reviewer_analysis.get("comments"):
-        logger.warning("[NODE: publish_comments] ⚠️ No reviewer comments found to publish")
+        logger.warning(
+            "[NODE: publish_comments]  No reviewer comments found to publish"
+        )
         return {
             "publication_stats": {
                 "total_comments": 0,
                 "successful": 0,
                 "failed": 0,
-                "message": "No reviewer comments to publish"
-            }
+                "message": "No reviewer comments to publish",
+            },
+            "published_comments": [],
         }
 
     comments = reviewer_analysis.get("comments", [])
@@ -40,36 +112,98 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
                 "total_comments": 0,
                 "successful": 0,
                 "failed": 0,
-                "message": "No comments to publish"
-            }
+                "message": "No comments to publish",
+            },
+            "published_comments": [],
         }
 
+    allowed_severities = [
+        "CRITICA",
+        "CRÍTICA",
+        "ALTA",
+        "CRITICAL",
+        "HIGH",
+    ]
+    filtered_comments = []
+    skipped_count = 0
+
+    for comment in comments:
+        priority = str(comment.get("priority", "BAIXA")).upper()
+        print(f"---------------------------")
+        print(comment)
+        print("---------------------------")
+
+        if priority in allowed_severities:
+            filtered_comments.append(comment)
+        else:
+            skipped_count += 1
+
+    if not filtered_comments and skipped_count > 0:
+        logger.info(
+            f"[NODE: publish_comments] All {skipped_count} comments were filtered out due to low severity."
+        )
+        return {
+            "publication_stats": {
+                "total_comments": 0,
+                "successful": 0,
+                "failed": 0,
+                "message": "All comments filtered by severity threshold",
+            },
+            "published_comments": [],
+        }
+
+    comments = filtered_comments
+
+    pr_data = state.get("pr_data", {})
+    validated_comments = []
+
+    for comment in comments:
+        file_path = comment.get("file", "")
+        line_number = comment.get("line")
+
+        if line_number and file_path:
+            validated_line = validate_and_fix_line_number(
+                file_path, line_number, pr_data
+            )
+
+            validated_comment = comment.copy()
+            validated_comment["line"] = validated_line
+
+            if validated_line != line_number:
+                logger.info(
+                    f"[NODE: publish_comments] Line adjusted for {file_path}: "
+                    f"{line_number} → {validated_line}"
+                )
+
+            validated_comments.append(validated_comment)
+        else:
+            validated_comments.append(comment)
+
     logger.info(
-        f"[NODE: publish_comments] Publishing {len(comments)} comment(s) "
-        f"from reviewer analysis"
+        f"[NODE: publish_comments] Publishing {len(validated_comments)} comment(s) "
+        f"from reviewer analysis (Skipped {skipped_count} low priority)"
     )
 
     publication_stats = AzureManager.publish_analysis_comments(
         pr_id=pr_id,
-        comments=comments
+        comments=validated_comments,
+        repository_id=state.get("repository_id"),
     )
 
     published_comments_list = publication_stats.get("published_comments", [])
 
     logger.info(
-        f"[NODE: publish_comments] ✅ Publication complete: "
+        f"[NODE: publish_comments]  Publication complete: "
         f"{publication_stats['successful']}/{publication_stats['total_comments']} "
         f"comments published successfully"
     )
 
-    if publication_stats['failed'] > 0:
+    if publication_stats["failed"] > 0:
         logger.warning(
-            f"[NODE: publish_comments] ⚠️ {publication_stats['failed']} comments "
+            f"[NODE: publish_comments] {publication_stats['failed']} comments "
             f"failed to publish"
         )
-        for error in publication_stats.get('errors', []):
+        for error in publication_stats.get("errors", []):
             logger.debug(f"[NODE: publish_comments] Error detail: {error}")
 
-    return {
-        "published_comments": published_comments_list
-    }
+    return {"published_comments": published_comments_list}

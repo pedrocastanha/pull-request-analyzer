@@ -5,54 +5,136 @@ from pydantic import BaseModel, Field
 class IssueBase(BaseModel):
     file: str = Field(description="File path where the issue was found")
     line: int = Field(description="Line number where the issue starts")
-    final_line: Optional[int] = Field(None, description="Final line number if issue spans multiple lines")
+    final_line: Optional[int] = Field(
+        None, description="Final line number if issue spans multiple lines"
+    )
     type: Optional[str] = Field(None, description="Type/category of the issue")
-    description: Optional[str] = Field(None, description="Detailed description of the issue")
-    evidence: Optional[str] = Field(None, description="Code snippet showing the problematic code")
-    impact: Optional[str] = Field(None, description="Impact and consequences of this issue")
+    description: Optional[str] = Field(
+        None, description="Detailed description of the issue"
+    )
+    evidence: Optional[str] = Field(
+        None, description="Code snippet showing the problematic code"
+    )
+    impact: Optional[str] = Field(
+        None, description="Impact and consequences of this issue"
+    )
     recommendation: Optional[str] = Field(None, description="How to fix this issue")
     example: Optional[str] = Field(None, description="Example of corrected code")
-    priority: Optional[str] = Field(None, description="Priority level: Baixa, Média, Alta, Crítica")
-    agent_type: Optional[str] = Field(None, description="Agent that found this issue: Security, Performance, CleanCode, Logical")
+    priority: Optional[str] = Field(
+        None, description="Priority level: Baixa, Média, Alta, Crítica"
+    )
+    agent_type: Optional[str] = Field(
+        None,
+        description="Agent that found this issue: Security, Performance, CleanCode, Logical",
+    )
     severity: Optional[str] = Field(None, description="Issue severity level")
     title: Optional[str] = Field(None, description="Short title of the issue")
 
 
 class SecurityAnalysis(BaseModel):
-    issues: List[IssueBase] = Field(default_factory=list, description="List of security issues found")
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of security issues found"
+    )
+    summary: Optional[str] = Field(None, description="Summary of security analysis")
+
+
+class ApiDesignResponse(BaseModel):
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of security issues found"
+    )
+    summary: Optional[str] = Field(None, description="Summary of security analysis")
+
+
+class ErrorHandlingResponse(BaseModel):
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of security issues found"
+    )
     summary: Optional[str] = Field(None, description="Summary of security analysis")
 
 
 class PerformanceAnalysis(BaseModel):
-    issues: List[IssueBase] = Field(default_factory=list, description="List of performance issues found")
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of performance issues found"
+    )
     summary: Optional[str] = Field(None, description="Summary of performance analysis")
 
 
 class CleanCodeAnalysis(BaseModel):
-    issues: List[IssueBase] = Field(default_factory=list, description="List of code quality issues found")
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of code quality issues found"
+    )
     summary: Optional[str] = Field(None, description="Summary of clean code analysis")
 
 
 class LogicalAnalysis(BaseModel):
-    issues: List[IssueBase] = Field(default_factory=list, description="List of logical bugs found")
+    issues: List[IssueBase] = Field(
+        default_factory=list, description="List of logical bugs found"
+    )
     summary: Optional[str] = Field(None, description="Summary of logical analysis")
 
 
 class ReviewerComment(BaseModel):
     file: str = Field(description="File path")
     line: int = Field(description="Line number")
-    final_line: Optional[int] = Field(None, description="Final line if spans multiple lines")
+    final_line: Optional[int] = Field(
+        None, description="Final line if spans multiple lines"
+    )
     priority: str = Field(description="Priority: Crítica, Alta, Média, Baixa")
-    agent_type: str = Field(description="Agent type: Security, Performance, CleanCode, Logical")
+    agent_type: str = Field(
+        description="Agent type: Security, Performance, CleanCode, Logical"
+    )
     message: str = Field(description="Complete formatted message for Azure DevOps")
 
 
 class ReviewerAnalysis(BaseModel):
-    comments: List[ReviewerComment] = Field(default_factory=list, description="List of consolidated comments for PR")
+    comments: List[ReviewerComment] = Field(
+        default_factory=list, description="List of consolidated comments for PR"
+    )
+
+
+class Repository(BaseModel):
+    id: str
+    name: str
+    url: str
+    project: dict
+    defaultBranch: Optional[str] = None
+    remoteUrl: str
+
+
+class Resource(BaseModel):
+    repository: Repository
+    pullRequestId: int
+    status: str
+    createdBy: dict
+    creationDate: str
+    title: str
+    description: Optional[str] = None
+    sourceRefName: str
+    targetRefName: str
+    mergeStatus: str
+    mergeId: str
+    lastMergeSourceCommit: dict
+    lastMergeTargetCommit: dict
+    lastMergeCommit: dict
+    reviewers: List[dict]
+    commits: Optional[List[dict]] = None
+    url: str
+    _links: dict
 
 
 class AnalyzePRRequest(BaseModel):
-    pull_request_id: int
+    subscriptionId: str
+    notificationId: int
+    id: str
+    eventType: str
+    publisherId: str
+    message: dict
+    detailedMessage: dict
+    resource: Resource
+    resourceVersion: str
+    resourceContainers: dict
+    createdDate: str
+    project_type: Optional[str] = "java"
 
 
 class AnalyzePRResponse(BaseModel):
@@ -61,4 +143,4 @@ class AnalyzePRResponse(BaseModel):
     pr_id: int
     comments: List[Dict[str, Any]] = []
     total_comments: int = 0
-    error: Optional[str] = None
+    error: Optional[List[str]] = None

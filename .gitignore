@@ -44,4 +44,6 @@ venv
 Thumbs.db
 EOF
 
+.claude
+.gemini
 CLAUDE.md

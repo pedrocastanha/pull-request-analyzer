@@ -10,7 +10,9 @@ from src.utils.pinecone_manager import PineconeManager
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-_rag_manager_ctx: ContextVar[Optional['RAGManager']] = ContextVar('rag_manager', default=None)
+_rag_manager_ctx: ContextVar[Optional["RAGManager"]] = ContextVar(
+    "rag_manager", default=None
+)
 
 
 def set_rag_manager(rag_manager):
@@ -61,7 +63,7 @@ def _search_pr_code_impl(
 
     if rag_manager is None:
         logger.error("[TOOL: search_pr_code] RAG Manager not initialized!")
-        return "❌ Sistema de busca não está disponível. Informe ao desenvolvedor."
+        return " Sistema de busca não está disponível. Informe ao desenvolvedor."
 
     try:
         logger.info(
@@ -76,11 +78,13 @@ def _search_pr_code_impl(
 
     except Exception as e:
         logger.error(f"[TOOL: search_pr_code] Error: {e}")
-        return f"❌ Erro ao buscar código: {str(e)}"
+        return f" Erro ao buscar código: {str(e)}"
 
 
 @tool
-def search_pr_code(query: str = "", top_k: int = 5, filter_extension: Optional[str] = None, **kwargs) -> str:
+def search_pr_code(
+    query: str = "", top_k: int = 5, filter_extension: Optional[str] = None, **kwargs
+) -> str:
     """
     🔍 Busca trechos de código relevantes no PR atual usando busca semântica vetorial.
 
@@ -117,13 +121,15 @@ def search_pr_code(query: str = "", top_k: int = 5, filter_extension: Optional[s
         search_pr_code("loops aninhados ou iterações", top_k=3)
         search_pr_code("imports de bibliotecas de segurança", filter_extension="py")
     """
-    if 'query=' in kwargs:
-        query = kwargs['query=']
+    if "query=" in kwargs:
+        query = kwargs["query="]
 
     if not query:
-        return "❌ Parâmetro 'query' é obrigatório"
+        return " Parâmetro 'query' é obrigatório"
 
-    return _search_pr_code_impl(query=query, top_k=top_k, filter_extension=filter_extension)
+    return _search_pr_code_impl(
+        query=query, top_k=top_k, filter_extension=filter_extension
+    )
 
 
 @lru_cache(maxsize=4)
@@ -182,18 +188,20 @@ def search_knowledge(query: str, namespace: str) -> str:
         return f"Erro ao buscar informações: {str(e)}"
 
 
-def _search_file_content_impl(file_path: str, line_number: int, context_lines: int = 5) -> str:
+def _search_file_content_impl(
+    file_path: str, line_number: int, context_lines: int = 5
+) -> str:
     try:
         if not os.path.exists(file_path):
-            return f"❌ Erro: Arquivo não encontrado: {file_path}"
+            return f" Erro: Arquivo não encontrado: {file_path}"
 
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         actual_line_index = line_number - 1
 
         if not (0 <= actual_line_index < len(lines)):
-            return f"❌ Erro: Número de linha inválido ({line_number}) para o arquivo {file_path}. O arquivo tem {len(lines)} linhas."
+            return f" Erro: Número de linha inválido ({line_number}) para o arquivo {file_path}. O arquivo tem {len(lines)} linhas."
 
         start_line = max(0, actual_line_index - context_lines)
         end_line = min(len(lines), actual_line_index + context_lines + 1)
@@ -202,19 +210,23 @@ def _search_file_content_impl(file_path: str, line_number: int, context_lines: i
         for i in range(start_line, end_line):
             snippet.append(f"{i + 1:4d}| {lines[i].rstrip()}")
 
+        snippet_text = "\n".join(snippet)
         return (
             f"Conteúdo do arquivo {file_path} em torno da linha {line_number}:\n"
             f"```\n"
-            f"{ '\n'.join(snippet)}\n"
+            f"{snippet_text}\n"
             f"```"
         )
 
     except Exception as e:
         logger.error(f"[TOOL: search_file_content] Error reading file {file_path}: {e}")
-        return f"❌ Erro ao ler o arquivo {file_path}: {str(e)}"
+        return f" Erro ao ler o arquivo {file_path}: {str(e)}"
+
 
 @tool
-def search_file_content_tool(file_path: str, line_number: int, context_lines: int = 5) -> str:
+def search_file_content_tool(
+    file_path: str, line_number: int, context_lines: int = 5
+) -> str:
     """
     🔍 Busca o conteúdo de um arquivo em torno de um número de linha específico.
 

@@ -16,6 +16,7 @@ _classifier = None
 
 async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     from src.providers.tools import set_rag_manager
+
     rag_manager = state.get("_rag_manager")
     if rag_manager:
         set_rag_manager(rag_manager)
@@ -24,11 +25,11 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     if pr_data is None:
         error_msg = "Cannot analyze clean code: pr_data is None"
         logger.error(f"[NODE: clean_code_analysis] {error_msg}")
-        return {"error": error_msg}
+        return {"error": [error_msg]}
 
     pr_id = pr_data["pr_id"]
-    total_files = pr_data["total_files"]
     files = pr_data["files"]
+    total_files = len(files)
 
     logger.info(
         f"[NODE: clean_code_analysis] Analyzing PR #{pr_id} "
@@ -55,8 +56,11 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     try:
         callback = AgentManager.get_callback(verbose=True)
 
+        project_type = state.get("project_type", "java")
         agent = AgentManager.get_agents(
-            tools=[search_knowledge, search_pr_code], agent_name="CleanCoder"
+            tools=[search_knowledge, search_pr_code],
+            agent_name="CleanCoder",
+            project_type=project_type,
         )
 
         response = await agent.ainvoke(
@@ -80,7 +84,9 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         try:
             analysis_result = CleanCodeAnalysis(**parsed_data)
         except ValidationError as e:
-            logger.warning(f"[NODE: clean_code_analysis] Validation error, using fallback: {e}")
+            logger.warning(
+                f"[NODE: clean_code_analysis] Validation error, using fallback: {e}"
+            )
             analysis_result = CleanCodeAnalysis(issues=[], summary="Validation failed")
 
         for issue in analysis_result.issues:
@@ -106,28 +112,42 @@ async def clean_coder_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
                     )
                 code_context = "\n".join(code_context_parts)
 
-                issues_dict = [issue.model_dump() if hasattr(issue, 'model_dump') else issue for issue in analysis_result.issues]
+                issues_dict = [
+                    issue.model_dump() if hasattr(issue, "model_dump") else issue
+                    for issue in analysis_result.issues
+                ]
                 classified_issues = _classifier.classify_issues(
                     agent_type="clean_code",
                     issues=issues_dict,
                     code_context=code_context,
                 )
 
-                problem_count = sum(1 for i in classified_issues if i.get('category') == 'PROBLEM')
-                suggestion_count = sum(1 for i in classified_issues if i.get('category') == 'SUGGESTION')
+                problem_count = sum(
+                    1 for i in classified_issues if i.get("category") == "PROBLEM"
+                )
+                suggestion_count = sum(
+                    1 for i in classified_issues if i.get("category") == "SUGGESTION"
+                )
                 logger.info(
-                    f"[NODE: clean_code_analysis] 🏷️ Classification: "
+                    f"[NODE: clean_code_analysis] Classification: "
                     f"{problem_count} PROBLEM, {suggestion_count} SUGGESTION"
                 )
 
-                return {"clean_code_analysis": {"issues": classified_issues, "summary": analysis_result.summary}}
+                return {
+                    "clean_code_analysis": {
+                        "issues": classified_issues,
+                        "summary": analysis_result.summary,
+                    }
+                }
 
             except Exception as e:
-                logger.warning(f"[NODE: clean_code_analysis] ⚠️ Classification skipped: {e}")
+                logger.warning(
+                    f"[NODE: clean_code_analysis]  Classification skipped: {e}"
+                )
 
         return {"clean_code_analysis": analysis_result.model_dump()}
 
     except Exception as e:
         error_msg = f"Error during clean code analysis: {str(e)}"
         logger.error(f"[NODE: clean_code_analysis] {error_msg}")
-        return {"error": error_msg}
+        return {"error": [error_msg]}

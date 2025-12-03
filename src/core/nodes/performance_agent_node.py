@@ -16,6 +16,7 @@ _classifier = None
 
 async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     from src.providers.tools import set_rag_manager
+
     rag_manager = state.get("_rag_manager")
     if rag_manager:
         set_rag_manager(rag_manager)
@@ -24,7 +25,7 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     if pr_data is None:
         error_msg = "Cannot analyze performance: pr_data is None"
         logger.error(f"[NODE: performance_analysis] {error_msg}")
-        return {"error": error_msg}
+        return {"error": [error_msg]}
 
     pr_id = pr_data["pr_id"]
     total_files = pr_data["total_files"]
@@ -50,7 +51,7 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         )
 
     context_parts.append(
-        "\n💡 Use a tool `search_pr_code()` para buscar trechos específicos do código!"
+        "\n Use a tool `search_pr_code()` para buscar trechos específicos do código!"
     )
 
     context = "\n".join(context_parts)
@@ -58,8 +59,11 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
     try:
         callback = AgentManager.get_callback(verbose=True)
 
+        project_type = state.get("project_type", "java")
         agent = AgentManager.get_agents(
-            tools=[search_knowledge, search_pr_code], agent_name="Performance"
+            tools=[search_knowledge, search_pr_code],
+            agent_name="Performance",
+            project_type=project_type,
         )
 
         logger.info(
@@ -87,8 +91,12 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
         try:
             analysis_result = PerformanceAnalysis(**parsed_data)
         except ValidationError as e:
-            logger.warning(f"[NODE: performance_analysis] Validation error, using fallback: {e}")
-            analysis_result = PerformanceAnalysis(issues=[], summary="Validation failed")
+            logger.warning(
+                f"[NODE: performance_analysis] Validation error, using fallback: {e}"
+            )
+            analysis_result = PerformanceAnalysis(
+                issues=[], summary="Validation failed"
+            )
 
         for issue in analysis_result.issues:
             issue.agent_type = "Performance"
@@ -113,27 +121,41 @@ async def performance_analysis_node(state: PRAnalysisState) -> Dict[str, Any]:
                     )
                 code_context = "\n".join(code_context_parts)
 
-                issues_dict = [issue.model_dump() if hasattr(issue, 'model_dump') else issue for issue in analysis_result.issues]
+                issues_dict = [
+                    issue.model_dump() if hasattr(issue, "model_dump") else issue
+                    for issue in analysis_result.issues
+                ]
                 classified_issues = _classifier.classify_issues(
                     agent_type="performance",
                     issues=issues_dict,
                     code_context=code_context,
                 )
 
-                problem_count = sum(1 for i in classified_issues if i.get('category') == 'PROBLEM')
-                suggestion_count = sum(1 for i in classified_issues if i.get('category') == 'SUGGESTION')
+                problem_count = sum(
+                    1 for i in classified_issues if i.get("category") == "PROBLEM"
+                )
+                suggestion_count = sum(
+                    1 for i in classified_issues if i.get("category") == "SUGGESTION"
+                )
                 logger.info(
-                    f"[NODE: performance_analysis] 🏷️ Classification: "
+                    f"[NODE: performance_analysis] Classification: "
                     f"{problem_count} PROBLEM, {suggestion_count} SUGGESTION"
                 )
 
-                return {"performance_analysis": {"issues": classified_issues, "summary": analysis_result.summary}}
+                return {
+                    "performance_analysis": {
+                        "issues": classified_issues,
+                        "summary": analysis_result.summary,
+                    }
+                }
 
             except Exception as e:
-                logger.warning(f"[NODE: performance_analysis] ⚠️ Classification skipped: {e}")
+                logger.warning(
+                    f"[NODE: performance_analysis] Classification skipped: {e}"
+                )
 
         return {"performance_analysis": analysis_result.model_dump()}
     except Exception as e:
         error_msg = f"Error during performance analysis: {str(e)}"
         logger.error(f"[NODE: performance_analysis] {error_msg}")
-        return {"error": error_msg}
+        return {"error": [error_msg]}
