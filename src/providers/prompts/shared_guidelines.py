@@ -1,12 +1,12 @@
 PRIORITY_GUIDELINES = """
 ═══════════════════════════════════════════════════════
-🎯 SISTEMA DE PRIORIDADES - TODAS SÃO SUGESTÕES
+ SISTEMA DE PRIORIDADES - TODAS SÃO SUGESTÕES
 ═══════════════════════════════════════════════════════
 
 TODAS as observações são consideradas SUGESTÕES. Use o campo `priority`
 para indicar o nível de urgência/importância.
 
-## 📊 NÍVEIS DE PRIORIDADE:
+##  NÍVEIS DE PRIORIDADE:
 
 ### CRÍTICA
 Vulnerabilidades de segurança ou bugs que causam crash/perda de dados.
@@ -86,54 +86,54 @@ Estrutura:
 
 Quando você fornece um campo `example` em um issue:
 
-## 🎯 PROPÓSITO DO EXEMPLO:
+##  PROPÓSITO DO EXEMPLO:
 - Mostrar a **IDEIA** da solução de forma **GENÉRICA** e **SIMPLIFICADA**
 - Servir como **REFERÊNCIA** e **INSPIRAÇÃO**, NÃO como código para copiar-colar
 - Ilustrar o **CONCEITO** técnico, não a implementação exata
 
-## ⚠️ REGRAS OBRIGATÓRIAS PARA EXEMPLOS:
+##  REGRAS OBRIGATÓRIAS PARA EXEMPLOS:
 
 1. **SEMPRE use exemplos GENÉRICOS e SIMPLIFICADOS**
-   ❌ NÃO: `if (Objects.isNull(discount)) throw new IllegalArgumentException("Discount cannot be null");`
-   ✅ SIM: `if (Objects.isNull(value)) /* validação apropriada */`
+    NÃO: `if (Objects.isNull(discount)) throw new IllegalArgumentException("Discount cannot be null");`
+    SIM: `if (Objects.isNull(value)) /* validação apropriada */`
 
 2. **SEMPRE adicione um aviso de ADAPTAÇÃO após o exemplo**
    Use frases como:
-   - "⚠️ Adapte este exemplo ao contexto específico do seu código"
-   - "⚠️ Este é um exemplo conceitual - ajuste para suas necessidades"
-   - "⚠️ Use esta ideia como referência, não como solução final"
+   - " Adapte este exemplo ao contexto específico do seu código"
+   - " Este é um exemplo conceitual - ajuste para suas necessidades"
+   - "️ Use esta ideia como referência, não como solução final"
 
 3. **NÃO dê código específico demais**
-   ❌ NÃO: Usar nomes de variáveis/métodos exatos do código
-   ✅ SIM: Usar nomes genéricos (value, item, data, etc.)
+    NÃO: Usar nomes de variáveis/métodos exatos do código
+    SIM: Usar nomes genéricos (value, item, data, etc.)
 
 4. **NÃO resolva o problema completamente**
-   ❌ NÃO: Código completo e pronto para usar
-   ✅ SIM: Pseudo-código ou snippet conceitual
+    NÃO: Código completo e pronto para usar
+    SIM: Pseudo-código ou snippet conceitual
 
-## ✅ EXEMPLOS DE BONS EXEMPLOS:
+##  EXEMPLOS DE BONS EXEMPLOS:
 
-**BOM ✅:**
+**BOM :**
 ```
 if (Objects.isNull(value)) throw new IllegalArgumentException("mensagem apropriada");
 
-⚠️ Adapte a validação e mensagem ao seu contexto
+️ Adapte a validação e mensagem ao seu contexto
 ```
 
-**BOM ✅:**
+**BOM :**
 ```
 try /* operação */ catch (Exception e) /* logger + throw */
 
-⚠️ Use sua estrutura de logs e exceptions
+️ Use sua estrutura de logs e exceptions
 ```
 
-**RUIM ❌:**
+**RUIM :**
 ```
 if (Objects.isNull(discount)) throw new IllegalArgumentException("Discount cannot be null");
 ```
 (Muito específico - usa nome exato da variável do código)
 
-**RUIM ❌:**
+**RUIM :**
 ```
 PreparedStatement stmt = connection.prepareStatement("SELECT * FROM table WHERE column = ?");
 ```
@@ -143,12 +143,12 @@ PreparedStatement stmt = connection.prepareStatement("SELECT * FROM table WHERE 
 
 No campo `example`, sempre use:
 - Código genérico e simplificado
-- Aviso de adaptação com ⚠️
+- Aviso de adaptação com ️
 
 **Lembre-se:** O desenvolvedor deve **PENSAR** e **ADAPTAR**, não apenas copiar e colar!
 
 ═══════════════════════════════════════════════════════
-💡 DICA: SEJA CONTEXTUAL
+ DICA: SEJA CONTEXTUAL
 ═══════════════════════════════════════════════════════
 
 A prioridade deve considerar:
@@ -167,24 +167,29 @@ Exemplo: N+1 query em API pública acessada 1000x/minuto = CRÍTICA
 - NÃO reporte "possíveis problemas" - apenas problemas CONFIRMADOS
 - Quando em dúvida, NÃO reporte
 
+**ZERO TOLERÂNCIA PARA RUÍDO:**
+1. **Dúvida = Lixo:** Se você não tem 100% de certeza que é um bug/falha, NÃO reporte.
+2. **Contexto é Rei:** Antes de reclamar de "falta de validação", verifique se não existe um Validador Global, Middleware ou Annotation que já faz isso.
+3. **Nitpicking Proibido:** Renomeação de variáveis, preferências de estilo (além do básico), ou "melhorias teóricas" que não trazem ganho real de performance/segurança são PROIBIDAS.
+
 **ANÁLISE DE CONTEXTO - VERIFICAÇÕES OBRIGATÓRIAS:**
 
 Antes de reportar, SEMPRE verifique se o código JÁ TEM:
-1. ✅ **Validações existentes** (`Objects.isNull()`, `if (x == null)`, `@NotNull`)
-2. ✅ **Try-catch implementado** (não reporte "falta try-catch" se já tem)
-3. ✅ **Exceções sendo lançadas** (`throw new IllegalArgumentException()`)
-4. ✅ **Validações em camadas anteriores** (Controller, Service, DTO)
-5. ✅ **Proteções do framework** (JPA parametriza queries, Spring valida DTOs)
+1.  **Validações existentes** (`Objects.isNull()`, `if (x == null)`, `@NotNull`)
+2.  **Try-catch implementado** (não reporte "falta try-catch" se já tem)
+3.  **Exceções sendo lançadas** (`throw new IllegalArgumentException()`)
+4.  **Validações em camadas anteriores** (Controller, Service, DTO)
+5.  **Proteções do framework** (JPA parametriza queries, Spring valida DTOs)
 
 **Regra de ouro:** Se o código JÁ trata o problema, NÃO reporte!
 
 ═══════════════════════════════════════════════════════
-⚠️ ATENÇÃO: NÚMEROS DE LINHA SÃO IMUTÁVEIS E CRÍTICOS
+️ ATENÇÃO: NÚMEROS DE LINHA SÃO IMUTÁVEIS E CRÍTICOS
 ═══════════════════════════════════════════════════════
 
 OS NÚMEROS DE LINHA SÃO A PARTE MAIS IMPORTANTE DA ANÁLISE!
 
-## 🎯 REGRAS ABSOLUTAS:
+##  REGRAS ABSOLUTAS:
 
 1. **SEMPRE extraia o número de linha EXATO do diff**
 2. **PROCURE por linhas que começam com `@@`**
@@ -194,14 +199,14 @@ OS NÚMEROS DE LINHA SÃO A PARTE MAIS IMPORTANTE DA ANÁLISE!
 5. **NÃO use números aproximados**
 6. **Se não conseguir identificar a linha exata, NÃO crie o issue**
 
-## 📝 COMO EXTRAIR LINHAS DE UM DIFF:
+## COMO EXTRAIR LINHAS DE UM DIFF:
 
 Exemplo de diff:
 ```
 @@ -45,7 +45,10 @@ def process_order(order_id):
  def validate_user(user_id):
--    query = "SELECT * FROM users WHERE id=" + str({{{{user_id}}}})
-+    query = f"SELECT * FROM users WHERE id={{{{{{{{user_id}}}}}}}}"
+-    query = "SELECT * FROM users WHERE id=" + str({{user_id}})
++    query = f"SELECT * FROM users WHERE id={{user_id}}"
      cursor.execute(query)
 ```
 
@@ -211,43 +216,107 @@ Interpretação:
 - Linha com `+` (adicionada) está na linha ~46-47
 - **Use a linha 46 ou 47 para reportar o issue**
 
-## ❌ NUNCA FAÇA:
-- ❌ "Aproximadamente linha 50"
-- ❌ Inventar números baseados em contexto
-- ❌ Usar números de outras partes do código
+##  NUNCA FAÇA:
+-  "Aproximadamente linha 50"
+-  Inventar números baseados em contexto
+-  Usar números de outras partes do código
 
-## ✅ SEMPRE FAÇA:
-- ✅ Extrair linha exata do diff usando marcadores `@@`
-- ✅ Contar linhas a partir do marcador
-- ✅ Verificar qual linha tem o símbolo `+` ou `-`
+##  SEMPRE FAÇA:
+-  Extrair linha exata do diff usando marcadores `@@`
+-  Contar linhas a partir do marcador
+-  Verificar qual linha tem o símbolo `+` ou `-`
 
 ═══════════════════════════════════════════════════════
 
-## 🎯 COMO EXTRAIR NÚMEROS DE LINHA CORRETOS
+##  COMO EXTRAIR NÚMEROS DE LINHA CORRETOS
 ═══════════════════════════════════════════════════════
 
-Quando você usa a tool `search_pr_code`, os resultados vêm com informações de linha:
+### 📍 DIFFS ANOTADOS COM NÚMEROS DE LINHA
+
+Quando você usa a tool `search_pr_code`, os resultados vêm com **diffs anotados**:
 
 **Exemplo de resposta da tool:**
-```
+```diff
 Encontrados 2 trechos:
 
-[1] src/api/users.py (line 45)
+[1] src/api/users.py (lines 45-48)
 @@ -43,5 +45,7 @@ def validate_user(user_id):
-+    query = f"SELECT * FROM users WHERE id={{{{user_id}}}}"
-     cursor.execute(query)
+[LINE: 45]  def validate_user(user_id):
+[LINE: 46] +    query = f"SELECT * FROM users WHERE id={{user_id}}"  # ← PROBLEMA AQUI!
+[LINE: 47] +    cursor.execute(query)
+[LINE: 48]      return result
 ```
 
-**COMO LER:**
-- `(line 45)` = A mudança começa na linha 45
-- Use EXATAMENTE esse número no campo `line` do issue
-- Se o trecho tem várias linhas, use `line` para a primeira e `final_line` para a última
+### 🎯 COMO IDENTIFICAR A LINHA CORRETA:
+
+**REGRAS:**
+1. **Procure por `[LINE: X]`** - esse é o número CORRETO da linha
+2. **Linhas com `+`** = código ADICIONADO (focar aqui!)
+3. **Linhas com `-`** = código REMOVIDO (ignore, não existem mais)
+4. **Linhas com espaço** = contexto (sem mudanças)
+5. **Se não tiver `[LINE: X]`** = é header de arquivo (+++, ---, @@), IGNORE
+
+**EXEMPLO PRÁTICO:**
+- Você encontrou um problema na linha `query = f"SELECT * FROM users WHERE id={{user_id}}"`
+- No diff anotado, essa linha tem `[LINE: 46]`
+- **USE `"line": 46`** no seu issue!
+
+### ❌ NÃO FAÇA:
+- ❌ Usar `line: 1` por padrão
+- ❌ "Chutar" números de linha
+- ❌ Usar o número de linha do chunk metadata (pode estar errado)
+- ❌ Inventar números baseados em contexto
+
+### ✅ FAÇA:
+- ✅ Extrair o número de `[LINE: X]` do código problemático
+- ✅ Se o problema abrange linhas 46-48, use `"line": 46, "final_line": 48`
+- ✅ Se não conseguir identificar `[LINE: X]`, NÃO crie o issue
 
 **REGRA ABSOLUTA:**
-1. Se a tool mostra `(line X)`, use X no campo `line`
-2. Se mostra `(lines X-Y)`, use X no `line` e Y no `final_line`
-3. NUNCA tente "calcular" ou "adivinhar" o número da linha
-4. Se não conseguir identificar a linha exata, NÃO crie o issue
+1. Se você vê `[LINE: X]` no código problemático, use X no campo `line`
+2. NUNCA tente "calcular" ou "adivinhar" o número da linha
+3. Se não conseguir identificar a linha exata com `[LINE: X]`, NÃO crie o issue
 
 ═══════════════════════════════════════════════════════
+"""
+
+LINE_IDENTIFICATION_GUIDE = """
+### 📍 COMO IDENTIFICAR A LINHA CORRETA NOS DIFFS ANOTADOS
+
+O código retornado por `search_pr_code` vem **anotado com números de linha**:
+
+```diff
+@@ -10,3 +10,4 @@
+[LINE: 10]  def authenticate(user):
+[LINE: 11] +    password = request.params.get("pwd")
+[LINE: 12] +    query = f"SELECT * FROM users WHERE name='{{user}}'"  # ← PROBLEMA AQUI!
+[LINE: 13]      return db.execute(query)
+```
+
+**REGRAS:**
+1. **Procure por `[LINE: X]`** - esse é o número CORRETO da linha
+2. **Linhas com `+`** = código ADICIONADO (focar aqui!)
+3. **Linhas com `-`** = código REMOVIDO (ignore, não existem mais)
+4. **Linhas com espaço** = contexto (sem mudanças)
+5. **Se não tiver `[LINE: X]`** = é header de arquivo (+++, ---, @@), IGNORE
+
+**EXEMPLO PRÁTICO:**
+- Você encontrou uma vulnerabilidade na linha `query = f"SELECT * FROM users WHERE name='{{user}}'"`
+- No diff anotado, essa linha tem `[LINE: 12]`
+- **USE `"line": 12`** no seu issue!
+
+**❌ NÃO FAÇA:**
+- ❌ Usar `line: 1` por padrão
+- ❌ "Chutar" números de linha
+- ❌ Usar o número de linha do chunk metadata (pode estar errado)
+
+**✅ FAÇA:**
+- ✅ Extrair o número de `[LINE: X]` do código problemático
+- ✅ Se o problema abrange linhas 12-15, use `"line": 12, "final_line": 15`
+- ✅ Se não conseguir identificar `[LINE: X]`, NÃO crie o issue
+
+**REGRA ABSOLUTA:**
+- Se você vê `[LINE: X]` no código problemático, use X no campo `line`
+- NUNCA tente "calcular" ou "adivinhar" o número da linha
+- Se não conseguir identificar a linha exata com `[LINE: X]`, NÃO crie o issue
 """

@@ -16,4 +16,5 @@ __all__ = [
     "reviewer_analysis_node",
     "publish_comments_node",
     "cleanup_resources_node",
+    "create_batches_node",
 ]

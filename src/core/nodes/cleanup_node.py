@@ -16,15 +16,15 @@ def cleanup_resources_node(state: PRAnalysisState) -> Dict[str, Any]:
     if rag_manager is not None:
         try:
             rag_manager.cleanup()
-            logger.info("[NODE: cleanup] ✅ RAG Manager cleaned successfully")
+            logger.info("[NODE: cleanup]  RAG Manager cleaned successfully")
         except Exception as e:
-            logger.error(f"[NODE: cleanup] ⚠️ Error cleaning RAG Manager: {e}")
+            logger.error(f"[NODE: cleanup] Error cleaning RAG Manager: {e}")
     else:
         logger.info("[NODE: cleanup] No RAG Manager to cleanup")
 
     _rag_manager_ctx.set(None)
-    logger.info("[NODE: cleanup] ✅ RAG Manager context cleared")
+    logger.info("[NODE: cleanup]  RAG Manager context cleared")
 
-    logger.info("[NODE: cleanup] ✅ Cleanup complete")
+    logger.info("[NODE: cleanup]  Cleanup complete")
 
     return {}

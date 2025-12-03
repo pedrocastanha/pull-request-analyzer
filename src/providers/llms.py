@@ -10,16 +10,12 @@ class LLMManager:
     @staticmethod
     def get_llm(model: str):
         return ChatOpenAI(
-            model=model,
-            temperature=0.3,
-            openai_api_key=Settings.OPENAI_API_KEY
+            model=model, temperature=0.3, openai_api_key=Settings.OPENAI_API_KEY
         )
 
     @staticmethod
     def get_structured_llm(model: str, schema: Type[BaseModel]):
         llm = ChatOpenAI(
-            model=model,
-            temperature=0.3,
-            openai_api_key=Settings.OPENAI_API_KEY
+            model=model, temperature=0.3, openai_api_key=Settings.OPENAI_API_KEY
         )
         return llm.with_structured_output(schema)

@@ -19,7 +19,9 @@ class IssueClassifier:
 
         try:
             if not Settings.GROQ_API_KEY:
-                logger.warning("[CLASSIFIER] ⚠️ GROQ_API_KEY not found - classifier disabled")
+                logger.warning(
+                    "[CLASSIFIER]  GROQ_API_KEY not found - classifier disabled"
+                )
                 return
 
             self.llm = ChatGroq(
@@ -30,7 +32,7 @@ class IssueClassifier:
             logger.info(f"[CLASSIFIER] ✓ Initialized with model: {model_name}")
 
         except Exception as e:
-            logger.error(f"[CLASSIFIER] ❌ Failed to initialize Groq: {e}")
+            logger.error(f"[CLASSIFIER]  Failed to initialize Groq: {e}")
             self.llm = None
 
     def classify_issues(
@@ -40,15 +42,21 @@ class IssueClassifier:
         code_context: str,
     ) -> List[Dict[str, Any]]:
         if not self.llm or not issues:
-            logger.warning("[CLASSIFIER] ⚠️ Classifier not available or no issues - using default category")
+            logger.warning(
+                "[CLASSIFIER]  Classifier not available or no issues - using default category"
+            )
             for issue in issues:
-                issue['category'] = 'SUGGESTION'  # Conservative default
+                issue["category"] = "SUGGESTION"  # Conservative default
             return issues
 
         try:
-            logger.info(f"[CLASSIFIER] 🔍 Classifying {len(issues)} issues from {agent_type} agent...")
+            logger.info(
+                f"[CLASSIFIER] 🔍 Classifying {len(issues)} issues from {agent_type} agent..."
+            )
 
-            user_prompt = self._build_classification_prompt(agent_type, issues, code_context)
+            user_prompt = self._build_classification_prompt(
+                agent_type, issues, code_context
+            )
 
             messages = [
                 SystemMessage(content=Classifier.SYSTEM_PROMPT),
@@ -61,8 +69,12 @@ class IssueClassifier:
 
             classified_issues = self._apply_classifications(issues, classifications)
 
-            problem_count = sum(1 for i in classified_issues if i.get('category') == 'PROBLEM')
-            suggestion_count = sum(1 for i in classified_issues if i.get('category') == 'SUGGESTION')
+            problem_count = sum(
+                1 for i in classified_issues if i.get("category") == "PROBLEM"
+            )
+            suggestion_count = sum(
+                1 for i in classified_issues if i.get("category") == "SUGGESTION"
+            )
 
             logger.info(
                 f"[CLASSIFIER] ✓ Classification complete: "
@@ -72,9 +84,9 @@ class IssueClassifier:
             return classified_issues
 
         except Exception as e:
-            logger.error(f"[CLASSIFIER] ❌ Classification failed: {e}")
+            logger.error(f"[CLASSIFIER]  Classification failed: {e}")
             for issue in issues:
-                issue['category'] = 'SUGGESTION'
+                issue["category"] = "SUGGESTION"
             return issues
 
     def _build_classification_prompt(
@@ -114,7 +126,9 @@ class IssueClassifier:
 """
         return prompt
 
-    def _parse_classification_response(self, response_text: str) -> List[Dict[str, Any]]:
+    def _parse_classification_response(
+        self, response_text: str
+    ) -> List[Dict[str, Any]]:
         try:
             response_text = response_text.strip()
 
@@ -131,7 +145,7 @@ class IssueClassifier:
             return data.get("classifications", [])
 
         except Exception as e:
-            logger.error(f"[CLASSIFIER] ❌ Failed to parse classification response: {e}")
+            logger.error(f"[CLASSIFIER]  Failed to parse classification response: {e}")
             return []
 
     def _apply_classifications(
@@ -140,14 +154,23 @@ class IssueClassifier:
         classifications: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
 
-        category_map = {}
+        classification_map = {}
         for classification in classifications:
-            idx = classification.get('index')
-            category = classification.get('category', 'PROBLEM')
-            category_map[idx] = category
+            idx = classification.get("index")
+            if idx is not None:
+                classification_map[idx] = classification
 
         for idx, issue in enumerate(issues):
-            category = category_map.get(idx, 'SUGGESTION')
-            issue['category'] = category
+            classification = classification_map.get(idx)
+
+            if classification:
+                issue["category"] = classification.get("category", "SUGGESTION")
+
+                new_severity = classification.get("severity")
+                if new_severity:
+                    issue["priority"] = new_severity.upper()
+
+            else:
+                issue["category"] = "SUGGESTION"
 
         return issues

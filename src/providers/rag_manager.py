@@ -47,6 +47,7 @@ class RAGManager:
                 logger.debug(f"[RAG] Skipping empty diff for {file_path}")
                 continue
 
+            annotated_diff = DiffParser.annotate_diff_with_lines(diff_text)
             parsed_diff = DiffParser.parse_diff(diff_text)
             line_ranges = DiffParser.get_changed_line_ranges(diff_text)
 
@@ -54,7 +55,7 @@ class RAGManager:
             line_end = line_ranges[-1][1] if line_ranges else None
 
             doc = Document(
-                page_content=diff_text,
+                page_content=annotated_diff,
                 metadata={
                     "file": file_path,
                     "change_type": file_info.get("change_type", "unknown"),
@@ -66,9 +67,14 @@ class RAGManager:
                     "line_start": line_start,
                     "line_end": line_end,
                     "total_chunks": parsed_diff["total_chunks"],
+                    "original_diff": diff_text,
                 },
             )
             documents.append(doc)
+
+            logger.debug(
+                f"[RAG] Indexed {file_path} with annotated diff (lines {line_start}-{line_end})"
+            )
 
         logger.info(
             f"[RAG] Prepared {len(documents)} documents from {len(files)} files"
@@ -96,10 +102,10 @@ class RAGManager:
                 documents=chunks, embedding=self.embeddings
             )
 
-            logger.info(f"[RAG] ✅ Vectorstore created with {len(chunks)} chunks")
+            logger.info(f"[RAG]  Vectorstore created with {len(chunks)} chunks")
 
         except Exception as e:
-            logger.error(f"[RAG] ❌ Error creating vectorstore: {e}")
+            logger.error(f"[RAG]  Error creating vectorstore: {e}")
             raise
 
     def _get_query_embedding(self, query: str) -> list:
@@ -107,7 +113,9 @@ class RAGManager:
             logger.info(f"[RAG] Cache HIT for query: '{query[:50]}...'")
             return self._embedding_cache[query]
 
-        logger.info(f"[RAG] Cache MISS for query: '{query[:50]}...', generating embedding")
+        logger.info(
+            f"[RAG] Cache MISS for query: '{query[:50]}...', generating embedding"
+        )
         embedding = self.embeddings.embed_query(query)
         self._embedding_cache[query] = embedding
         return embedding
@@ -119,13 +127,15 @@ class RAGManager:
             logger.error(
                 "[RAG] Vectorstore not created. Call create_from_pr_data first!"
             )
-            return "❌ RAG não foi criado. Não é possível buscar no código."
+            return " RAG não foi criado. Não é possível buscar no código."
 
         logger.info(f"[RAG] Searching for: '{query}' (top {k})")
 
         try:
             query_embedding = self._get_query_embedding(query)
-            docs = self.vectorstore.similarity_search_by_vector(query_embedding, k=k * 2)
+            docs = self.vectorstore.similarity_search_by_vector(
+                query_embedding, k=k * 2
+            )
 
             if filter_extension:
                 docs = [
@@ -140,7 +150,7 @@ class RAGManager:
             docs = docs[:k]
 
             if not docs:
-                return f"❌ Nenhum trecho de código encontrado para: '{query}'"
+                return f" Nenhum trecho de código encontrado para: '{query}'"
 
             result_parts = [f"Encontrados {len(docs)} trechos:\n"]
 
@@ -161,17 +171,17 @@ class RAGManager:
 
             formatted_result = "\n".join(result_parts)
 
-            logger.info(f"[RAG] ✅ Returned {len(docs)} relevant chunks")
+            logger.info(f"[RAG]  Returned {len(docs)} relevant chunks")
 
             return formatted_result
 
         except Exception as e:
-            logger.error(f"[RAG] ❌ Error searching: {e}")
-            return f"❌ Erro ao buscar no código: {str(e)}"
+            logger.error(f"[RAG]  Error searching: {e}")
+            return f" Erro ao buscar no código: {str(e)}"
 
     def get_all_files_summary(self) -> str:
         if self.vectorstore is None:
-            return "❌ RAG não foi criado."
+            return " RAG não foi criado."
 
         all_docs = self.vectorstore.similarity_search("", k=1000)
 
@@ -185,7 +195,7 @@ class RAGManager:
                     "extension": doc.metadata.get("extension", "unknown"),
                 }
 
-        summary_parts = [f"📊 PR contém {len(files_info)} arquivos modificados:\n"]
+        summary_parts = [f" PR contém {len(files_info)} arquivos modificados:\n"]
 
         for file_path, info in sorted(files_info.items()):
             summary_parts.append(
@@ -197,14 +207,14 @@ class RAGManager:
 
     def cleanup(self):
         if self.vectorstore is not None:
-            logger.info("[RAG] 🗑️ Cleaning up vectorstore")
+            logger.info("[RAG]  Cleaning up vectorstore")
             self.vectorstore = None
         else:
             logger.info("[RAG] No vectorstore to cleanup")
 
         if self._embedding_cache:
             cache_size = len(self._embedding_cache)
-            logger.info(f"[RAG] 🗑️ Clearing embedding cache ({cache_size} entries)")
+            logger.info(f"[RAG]  Clearing embedding cache ({cache_size} entries)")
             self._embedding_cache.clear()
         else:
             logger.info("[RAG] No embedding cache to cleanup")
