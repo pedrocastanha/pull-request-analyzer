@@ -19,3 +19,5 @@ langsmith
 langchain_community
 faiss-cpu
 langchain_groq
+ddgs
+duckduckgo_search

@@ -115,7 +115,7 @@ class Resource(BaseModel):
     mergeId: str
     lastMergeSourceCommit: dict
     lastMergeTargetCommit: dict
-    lastMergeCommit: dict
+    lastMergeCommit: Optional[dict] = None
     reviewers: List[dict]
     commits: Optional[List[dict]] = None
     url: str

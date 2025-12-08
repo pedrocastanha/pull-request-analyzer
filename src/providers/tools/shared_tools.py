@@ -6,6 +6,7 @@ from typing import Optional
 
 from langchain_core.tools import tool
 from src.utils.pinecone_manager import PineconeManager
+from duckduckgo_search import DDGS
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -187,7 +188,6 @@ def search_knowledge(query: str, namespace: str) -> str:
         logger.error(f"[TOOL: search_informations] Error searching: {e}")
         return f"Erro ao buscar informações: {str(e)}"
 
-
 def _search_file_content_impl(
     file_path: str, line_number: int, context_lines: int = 5
 ) -> str:
@@ -248,3 +248,49 @@ def search_file_content_tool(
         search_file_content_tool("config/app.py", 45, context_lines=3)
     """
     return _search_file_content_impl(file_path, line_number, context_lines)
+
+
+@tool
+def search_web_docs(query: str) -> str:
+    """
+    🔍 Pesquisa na web por documentação técnica oficial e atualizada.
+
+    QUANDO USAR:
+    - Para verificar a assinatura correta de métodos em bibliotecas/frameworks.
+    - Para encontrar a documentação oficial de uma tecnologia (ex: Spring Boot, Next.js).
+    - Para validar se uma prática é recomendada na versão atual da ferramenta.
+    - Para buscar soluções para erros específicos ou comportamentos de APIs.
+
+    Args:
+        query: A consulta de busca. Seja específico e inclua o nome da tecnologia.
+               Exemplos:
+                 - "Spring Boot 3 SecurityFilterChain configuration"
+                 - "Next.js 14 server actions error handling"
+                 - "Java 21 new features pattern matching"
+
+    Returns:
+        Um resumo dos resultados da busca com links e trechos relevantes.
+    """
+    try:
+
+        logger.info(f"[TOOL: search_web_docs] Searching for: '{query}'")
+        
+        with DDGS() as ddgs:
+            results = list(ddgs.text(query, max_results=4))
+            
+        if not results:
+            return f" Nenhum resultado encontrado para: '{query}'"
+            
+        formatted_results = [f"Resultados para '{query}':\n"]
+        for i, res in enumerate(results, 1):
+            formatted_results.append(f"[{i}] {res['title']}")
+            formatted_results.append(f"    URL: {res['href']}")
+            formatted_results.append(f"    Resumo: {res['body']}\n")
+            
+        return "\n".join(formatted_results)
+        
+    except ImportError:
+        return " Erro: A biblioteca duckduckgo-search não está instalada."
+    except Exception as e:
+        logger.error(f"[TOOL: search_web_docs] Error searching: {e}")
+        return f" Erro ao buscar na web: {str(e)}"

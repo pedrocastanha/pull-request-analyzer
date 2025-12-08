@@ -4,7 +4,7 @@ from typing import Dict, Any
 from src.core.state import PRAnalysisState
 from src.providers.rag_manager import RAGManager
 from src.providers.tools import set_rag_manager
-from src.utils.file_filters import filter_analyzable_files
+from src.utils.file_filter import FileFilter
 
 logger = logging.getLogger(__name__)
 
@@ -40,11 +40,17 @@ def setup_rag_node(state: PRAnalysisState) -> Dict[str, Any]:
     try:
         rag_manager = RAGManager()
 
-        analyzable_files, ignored_files = filter_analyzable_files(current_batch)
+        # Filter files using the new FileFilter
+        analyzable_files = [
+            f for f in current_batch
+            if not FileFilter.should_ignore_globally(f.get("path", ""))
+            and not FileFilter.should_ignore_change_type(f.get("change_type", ""))
+        ]
+        ignored_count = len(current_batch) - len(analyzable_files)
 
         logger.info(
             f"[NODE: setup_rag] Filtered files: {len(analyzable_files)} to analyze, "
-            f"{len(ignored_files)} ignored"
+            f"{ignored_count} ignored"
         )
 
         pr_data_batch = pr_data.copy()

@@ -1,8 +1,10 @@
-from .shared_guidelines import PRIORITY_GUIDELINES
+from .shared_guidelines import PRIORITY_GUIDELINES, CODE_REVIEW_CONTEXT
 
 
 class Reviewer:
-    DEBATE_SYSTEM_PROMPT = """
+    DEBATE_SYSTEM_PROMPT = (
+        CODE_REVIEW_CONTEXT
+        + """
 # PR Reviewer Debate - Auditor de Qualidade (QA)
 
 Você é o **Auditor de Qualidade (QA)** do Pull Request. Sua função é validar, filtrar e corrigir os comentários propostos pelo "Reviewer Principal" antes que sejam publicados.
@@ -54,9 +56,11 @@ Retorne um JSON com a lista de comentários **APROVADOS E CORRIGIDOS**.
 
 Se nenhum comentário for válido para este arquivo, retorne `{{ "comments": [] }}`.
 """
+    )
 
     SYSTEM_PROMPT = (
-        """
+        CODE_REVIEW_CONTEXT
+        + """
 # PR Reviewer Agent - Consolidador Final
 
 Você é o **Reviewer Principal** do Pull Request, responsável por consolidar todas as análises e gerar comentários estruturados.

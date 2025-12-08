@@ -30,4 +30,21 @@ def fetch_pr_data_node(state: PRAnalysisState) -> Dict[str, Any]:
         f"+{pr_data['total_additions']}/-{pr_data['total_deletions']} lines"
     )
 
+    from src.utils.file_filter import FileFilter
+
+    if pr_data and "files" in pr_data:
+        original_count = len(pr_data["files"])
+        pr_data["files"] = [
+            f for f in pr_data["files"] 
+            if not FileFilter.should_ignore_globally(f.get("path", ""))
+            and not FileFilter.should_ignore_change_type(f.get("change_type", ""))
+        ]
+        filtered_count = len(pr_data["files"])
+        
+        if original_count != filtered_count:
+            logger.info(
+                f"[NODE: fetch_pr_data] Filtered {original_count - filtered_count} files globally. "
+                f"Remaining: {filtered_count}"
+            )
+
     return {"pr_data": pr_data}

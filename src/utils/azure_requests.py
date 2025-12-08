@@ -68,7 +68,7 @@ class AzureManager:
 
             for change in file_changes:
                 item = change.get("item", {})
-                file_path = item.get("path")
+                file_path = item.get("path", "").lstrip("/")
 
                 if not file_path:
                     logger.warning("Change without file path, skipping...")

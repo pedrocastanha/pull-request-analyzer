@@ -43,14 +43,15 @@ async def reviewer_debate_node(state: PRAnalysisState) -> Dict[str, Any]:
 
     try:
         base_prompt = Reviewer.DEBATE_SYSTEM_PROMPT
-        structured_llm = LLMManager.get_structured_llm("gpt-4.1-nano", ReviewerAnalysis)
+        structured_llm = LLMManager.get_structured_llm("gpt-4.1-mini", ReviewerAnalysis)
     except Exception as e:
         logger.error(f"[NODE: reviewer_debate] Failed to init LLM: {e}")
         return {}
 
     validated_comments = []
 
-    for file_path, comments in comments_by_file.items():
+    for file_path_raw, comments in comments_by_file.items():
+        file_path = file_path_raw.lstrip("/")
         file_diff_data = next(
             (f for f in pr_data.get("files", []) if f.get("path") == file_path), None
         )

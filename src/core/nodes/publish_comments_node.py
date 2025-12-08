@@ -122,7 +122,10 @@ def publish_comments_node(state: PRAnalysisState) -> Dict[str, Any]:
         "CRÍTICA",
         "ALTA",
         "CRITICAL",
-        "HIGH",
+        "HIGH"
+        # "MÉDIA",
+        # "MÉDIO",
+        # "MEDIUM"
     ]
     filtered_comments = []
     skipped_count = 0

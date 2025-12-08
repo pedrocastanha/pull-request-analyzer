@@ -1,5 +1,10 @@
+from .shared_guidelines import CODE_REVIEW_CONTEXT
+
+
 class Classifier:
-    SYSTEM_PROMPT = """
+    SYSTEM_PROMPT = (
+        CODE_REVIEW_CONTEXT
+        + """
 You are an expert code reviewer tasked with classifying issues found in pull requests.
 
 Your job is to classify each issue as either:
@@ -28,6 +33,7 @@ Your job is to classify each issue as either:
 - CORS configuration (might be intentional)
 - N+1 queries with small volume (<20 items)
 - "Could refactor" without clear benefit
+- Style, formatting, comments, docstrings
 
 ## Your Task:
 
@@ -52,22 +58,22 @@ For EACH issue, return:
 ## Response Format (JSON):
 
 ```json
-{{
+{
   "classifications": [
-    {{
+    {
       "index": 0,
       "category": "PROBLEM",
       "severity": "HIGH",
       "reasoning": "Brief explanation"
-    }},
-    {{
+    },
+    {
       "index": 1,
       "category": "SUGGESTION",
       "severity": "LOW",
       "reasoning": "Subjective improvement"
-    }}
+    }
   ]
-}}
+}
 ```
 
 **IMPORTANT:**
@@ -76,3 +82,4 @@ For EACH issue, return:
 - Severity must be CRITICAL, HIGH, MEDIUM, or LOW
 - **BE STRICT:** Most "Suggestions" are LOW severity.
 """
+    )

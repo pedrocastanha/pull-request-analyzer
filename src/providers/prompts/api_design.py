@@ -1,4 +1,4 @@
-from .shared_guidelines import PRIORITY_GUIDELINES, LINE_IDENTIFICATION_GUIDE
+from .shared_guidelines import PRIORITY_GUIDELINES, LINE_IDENTIFICATION_GUIDE, COSMETIC_CHANGES_FILTER, CODE_REVIEW_CONTEXT
 
 
 class APIDesignAnalyst:
@@ -298,7 +298,9 @@ Ao analisar, preste atenção ao `change_type` de cada arquivo:
             specific_rules = cls.DEFAULT_RULES
 
         return (
-            cls.BASE_PROMPT.format(
+            COSMETIC_CHANGES_FILTER
+            + CODE_REVIEW_CONTEXT
+            + cls.BASE_PROMPT.format(
                 specific_rules=specific_rules,
                 line_identification_guide=LINE_IDENTIFICATION_GUIDE,
             )

@@ -1,4 +1,4 @@
-from .shared_guidelines import PRIORITY_GUIDELINES, LINE_IDENTIFICATION_GUIDE
+from .shared_guidelines import PRIORITY_GUIDELINES, LINE_IDENTIFICATION_GUIDE, COSMETIC_CHANGES_FILTER, CODE_REVIEW_CONTEXT
 
 
 class Performance:
@@ -310,7 +310,9 @@ Seja um parceiro técnico pragmático, não um otimizador teórico. Reporte apen
             specific_rules = cls.DEFAULT_RULES
 
         return (
-            cls.BASE_PROMPT.format(
+            COSMETIC_CHANGES_FILTER
+            + CODE_REVIEW_CONTEXT
+            + cls.BASE_PROMPT.format(
                 specific_rules=specific_rules,
                 line_identification_guide=LINE_IDENTIFICATION_GUIDE,
             )
